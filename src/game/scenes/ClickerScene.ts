@@ -3,7 +3,6 @@ import { GameState } from "../systems/GameState";
 import { SaveSystem } from "../systems/SaveSystem";
 
 export class ClickerScene extends Phaser.Scene {
-
     private counterText!: Phaser.GameObjects.Text;
 
     constructor() {
@@ -11,11 +10,14 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     create() {
+        GameState.instance.on('scoreChanged', (points: number) => {
+            this.counterText.setText(`Clicks: ${points}`);
+            SaveSystem.save();
+        });
 
         SaveSystem.load();
 
         const centerX = this.cameras.main.width / 2;
-
         this.counterText = this.add.text(
             centerX,
             150,
@@ -39,15 +41,7 @@ export class ClickerScene extends Phaser.Scene {
             .setInteractive({ useHandCursor: true });
 
         button.on("pointerdown", () => {
-
             GameState.instance.addClick();
-
-            this.counterText.setText(
-                `Clicks: ${GameState.instance.clicks}`
-            );
-
-            SaveSystem.save();
-
         });
 
     }

@@ -3,9 +3,7 @@ import { GameState } from "./GameState";
 const SAVE_KEY = "clicker-save";
 
 export class SaveSystem {
-
     static save() {
-
         const data = {
             clicks: GameState.instance.clicks
         };
@@ -14,7 +12,6 @@ export class SaveSystem {
     }
 
     static load() {
-
         const raw = localStorage.getItem(SAVE_KEY);
 
         if (!raw) return;

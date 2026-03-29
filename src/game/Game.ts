@@ -2,7 +2,6 @@ import Phaser from "phaser";
 import { ClickerScene } from "./scenes/ClickerScene";
 
 export function createGame() {
-
     const config: Phaser.Types.Core.GameConfig = {
         type: Phaser.AUTO,
         width: 800,

@@ -7,13 +7,16 @@ export default [
 
   {
     files: ["**/*.ts"],
-
     rules: {
       semi: ["error", "always"],
-
       indent: ["error", 4],
+      "@typescript-eslint/no-explicit-any": "error",
 
-      "@typescript-eslint/no-explicit-any": "error"
+      "no-multiple-empty-lines": ["error", {
+        "max": 1,
+        "maxEOF": 0,
+        "maxBOF": 0
+      }]
     }
   }
 ];
