@@ -11,3 +11,10 @@ body {
   align-items: center;
   height: 100vh;
 }
+
+canvas {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
+}
