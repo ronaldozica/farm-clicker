@@ -53,9 +53,10 @@ export class ClickerScene extends Phaser.Scene {
         const centerX = this.cameras.main.width / 2;
 
         this.counterText = this.add.text(centerX, 80, `Carrots: ${GameState.instance.clicks}`, {
-            fontSize: "40px",
-            fontFamily: "Courier",
-            color: "#ffca28"
+            fontSize: "36px",
+            fontFamily: "'Inter', Arial, sans-serif",
+            color: "#ffca28",
+            fontStyle: "600"
         }).setOrigin(0.5);
 
         this.carrot = this.add.sprite(centerX, 250, "carrot-sheet")
@@ -69,10 +70,10 @@ export class ClickerScene extends Phaser.Scene {
     private createPlantButton(x: number) {
         const buttonBg = this.add.rectangle(x, 550, 200, 80, 0x8d6e63).setStrokeStyle(6, 0x5d4037);
         const buttonText = this.add.text(x, 550, "Plant", {
-            fontSize: "32px",
-            fontFamily: "Courier",
+            fontSize: "28px",
+            fontFamily: "'Inter', Arial, sans-serif",
             color: "#ffffff",
-            fontStyle: "bold"
+            fontStyle: "700"
         }).setOrigin(0.5);
 
         buttonBg.setInteractive({ useHandCursor: true })
