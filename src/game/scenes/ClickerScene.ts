@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { GameState } from "../systems/GameState";
 import { SaveSystem } from "../systems/SaveSystem";
+import { ShopUI } from "./UI";
 
 export class ClickerScene extends Phaser.Scene {
     private counterText!: Phaser.GameObjects.Text;
@@ -38,8 +39,8 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private setupEventListeners() {
-        GameState.instance.on("scoreChanged", (points: number) => {
-            this.counterText.setText(`Carrots: ${points}`);
+        GameState.instance.on("scoreChanged", (carrots: number) => {
+            this.counterText.setText(`Carrots: ${carrots}`);
             this.updateCounterBackground();
             SaveSystem.save();
         });
@@ -62,17 +63,22 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private initializeUI() {
-        const centerX = this.cameras.main.width / 2;
         const fullH = this.cameras.main.height;
+
+        const centerX = this.cameras.main.width / 2;
         const counterY = fullH * 0.1;
+
         const buttonY = fullH - (fullH * 0.1);
+
+        const shopOffset = 30;
 
         this.createBackground();
         this.createScoreUI(centerX, counterY);
         this.createFarm(centerX);
-
+        
         this.progressBar = this.add.graphics();
         this.createPlantButton(centerX, buttonY);
+        this.createShopButton(centerX + shopOffset, buttonY);
     }
 
     private createBackground() {
@@ -91,7 +97,7 @@ export class ClickerScene extends Phaser.Scene {
 
     private createScoreUI(centerX: number, counterY: number) {
         this.counterBg = this.add.graphics();
-        this.counterText = this.add.text(centerX, counterY, `Carrots: ${GameState.instance.clicks}`, {
+        this.counterText = this.add.text(centerX, counterY, `Carrots: ${GameState.instance.carrots}`, {
             fontSize: "32px",
             fontFamily: "'Inter', 'Nunito', sans-serif",
             color: "#4e342e",
@@ -104,7 +110,7 @@ export class ClickerScene extends Phaser.Scene {
 
     private updateCounterBackground() {
         this.counterBg.clear();
-        
+
         const paddingX = 40;
         const paddingY = 20;
         const cbw = this.counterText.width + paddingX;
@@ -116,15 +122,15 @@ export class ClickerScene extends Phaser.Scene {
         this.counterBg.fillStyle(0x000000, 0.15);
         this.counterBg.fillRoundedRect(x, y + 4, cbw, cbh, radius);
 
-        this.counterBg.fillStyle(0xfff8e1, 1); 
+        this.counterBg.fillStyle(0xfff8e1, 1);
         this.counterBg.fillRoundedRect(x, y, cbw, cbh, radius);
-        
+
         this.counterBg.lineStyle(4, 0x8d6e63, 1);
         this.counterBg.strokeRoundedRect(x, y, cbw, cbh, radius);
     }
 
     private createFarm(centerX: number) {
-        const fullH = this.cameras.main.height; 
+        const fullH = this.cameras.main.height;
         const carrotOffset = 75
         const carrotY = fullH / 2 - carrotOffset;
 
@@ -153,7 +159,7 @@ export class ClickerScene extends Phaser.Scene {
 
     private createPlantButton(x: number, y: number) {
         const shadow = this.add.rectangle(x, y + 8, 200, 80, 0x3e2723, 0.4).setOrigin(0.5);
-        
+
         this.buttonBg = this.add.rectangle(x, y, 200, 80, 0x689f38)
             .setStrokeStyle(4, 0x33691e)
             .setOrigin(0.5);
@@ -214,7 +220,7 @@ export class ClickerScene extends Phaser.Scene {
         this.tweens.add({
             targets: { progress: 0 },
             progress: 1,
-            duration: 1000,
+            duration: 1000 - GameState.instance.getGlobalSpeedReduction(),
             onUpdate: (_, target) => this.drawProgressBar(target.progress),
             onComplete: () => this.handleHarvest()
         });
@@ -241,7 +247,7 @@ export class ClickerScene extends Phaser.Scene {
         const width = 150;
         const x = this.cameras.main.width / 2 - width / 2;
 
-        const fullH = this.cameras.main.height; 
+        const fullH = this.cameras.main.height;
         const carrotOffset = 150;
         const y = fullH / 2 + carrotOffset;
 
@@ -250,5 +256,19 @@ export class ClickerScene extends Phaser.Scene {
 
         this.progressBar.fillStyle(0x444444).fillRect(x, y, width, 15);
         this.progressBar.fillStyle(0xffeb3b).fillRect(x, y, width * progress, 15);
+    }
+
+    private createShopButton(centerX: number, y: number) {
+        const shopBtn = this.add.rectangle(centerX + 120, y, 80, 80, 0x8d6e63)
+            .setStrokeStyle(4, 0x4e342e)
+            .setInteractive({ useHandCursor: true });
+
+        this.add.text(centerX + 120, y, "🛒", { fontSize: "32px" }).setOrigin(0.5);
+
+        const shop = new ShopUI();
+
+        shopBtn.on("pointerdown", () => {
+            shop.open();
+        });
     }
 }
