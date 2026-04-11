@@ -30,10 +30,10 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     create() {
-        SaveSystem.load();
-        this.setupEventListeners();
         this.createAnimations();
         this.initializeUI();
+        this.setupEventListeners();
+        SaveSystem.load();
         this.setupResizeHandler();
     }
 
@@ -91,7 +91,7 @@ export class ClickerScene extends Phaser.Scene {
         const uiY = 75;
 
         this.counterBg = this.add.graphics();
-        this.counterText = this.add.text(centerX, uiY, `Carrots: ${GameState.instance.clicks}`, {
+        this.counterText = this.add.text(centerX, uiY, `Carrots: ${GameState.instance.carrots}`, {
             fontSize: "32px",
             fontFamily: "'Inter', Arial, sans-serif",
             color: "#ffffffff",
