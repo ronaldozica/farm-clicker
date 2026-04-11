@@ -64,13 +64,15 @@ export class ClickerScene extends Phaser.Scene {
     private initializeUI() {
         const centerX = this.cameras.main.width / 2;
         const fullH = this.cameras.main.height;
+        const counterY = fullH * 0.1;
+        const buttonY = fullH - (fullH * 0.1);
 
         this.createBackground();
-        this.createScoreUI(centerX);
+        this.createScoreUI(centerX, counterY);
         this.createFarm(centerX);
 
         this.progressBar = this.add.graphics();
-        this.createPlantButton(centerX, fullH - 80);
+        this.createPlantButton(centerX, buttonY);
     }
 
     private createBackground() {
@@ -87,11 +89,9 @@ export class ClickerScene extends Phaser.Scene {
         this.bg.setTileScale(bgScale, bgScale);
     }
 
-    private createScoreUI(centerX: number) {
-        const uiY = 75;
-
+    private createScoreUI(centerX: number, counterY: number) {
         this.counterBg = this.add.graphics();
-        this.counterText = this.add.text(centerX, uiY, `Carrots: ${GameState.instance.carrots}`, {
+        this.counterText = this.add.text(centerX, counterY, `Carrots: ${GameState.instance.carrots}`, {
             fontSize: "32px",
             fontFamily: "'Inter', Arial, sans-serif",
             color: "#ffffffff",
@@ -113,7 +113,10 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private createFarm(centerX: number) {
-        const carrotY = 220;
+        const fullH = this.cameras.main.height; 
+        const carrotOffset = 75
+        const carrotY = fullH / 2 - carrotOffset;
+
         this.farmContainer = this.add.container(centerX, carrotY);
 
         this.carrot = this.add.sprite(0, 0, "carrot-sheet").setScale(0.5).play("idle");
@@ -213,7 +216,10 @@ export class ClickerScene extends Phaser.Scene {
     private drawProgressBar(progress: number) {
         const width = 150;
         const x = this.cameras.main.width / 2 - width / 2;
-        const y = 450;
+
+        const fullH = this.cameras.main.height; 
+        const carrotOffset = 150;
+        const y = fullH / 2 + carrotOffset;
 
         this.progressBar.clear();
         if (progress <= 0) return;

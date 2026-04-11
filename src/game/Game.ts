@@ -7,10 +7,10 @@ export function createGame() {
         parent: "game-container",
         backgroundColor: "#1e1e1e",
         scale: {
-            mode: Phaser.Scale.FIT,
+            mode: Phaser.Scale.RESIZE,
             autoCenter: Phaser.Scale.CENTER_BOTH,
-            width: 800,
-            height: 600,
+            width: window.innerWidth,
+            height: window.innerHeight,
         },
         scene: [ClickerScene]
     };
