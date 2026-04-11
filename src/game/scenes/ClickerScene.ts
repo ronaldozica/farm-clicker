@@ -91,13 +91,12 @@ export class ClickerScene extends Phaser.Scene {
 
     private createScoreUI(centerX: number, counterY: number) {
         this.counterBg = this.add.graphics();
+        
         this.counterText = this.add.text(centerX, counterY, `Carrots: ${GameState.instance.carrots}`, {
             fontSize: "32px",
-            fontFamily: "'Inter', Arial, sans-serif",
-            color: "#ffffffff",
-            fontStyle: "700",
-            stroke: "#000000",
-            strokeThickness: 3
+            fontFamily: "'Inter', 'Nunito', sans-serif",
+            color: "#4e342e",
+            fontStyle: "900",
         }).setOrigin(0.5);
 
         this.counterText.setDepth(5);
@@ -106,10 +105,23 @@ export class ClickerScene extends Phaser.Scene {
 
     private updateCounterBackground() {
         this.counterBg.clear();
-        const cbw2 = this.counterText.width + 28;
-        const cbh2 = this.counterText.height + 14;
-        this.counterBg.fillStyle(0x263238, 0.6);
-        this.counterBg.fillRoundedRect(this.counterText.x - cbw2 / 2, this.counterText.y - cbh2 / 2, cbw2, cbh2, 8);
+        
+        const paddingX = 40;
+        const paddingY = 20;
+        const cbw = this.counterText.width + paddingX;
+        const cbh = this.counterText.height + paddingY;
+        const x = this.counterText.x - cbw / 2;
+        const y = this.counterText.y - cbh / 2;
+        const radius = cbh / 2;
+
+        this.counterBg.fillStyle(0x000000, 0.15);
+        this.counterBg.fillRoundedRect(x, y + 4, cbw, cbh, radius);
+
+        this.counterBg.fillStyle(0xfff8e1, 1); 
+        this.counterBg.fillRoundedRect(x, y, cbw, cbh, radius);
+        
+        this.counterBg.lineStyle(4, 0x8d6e63, 1);
+        this.counterBg.strokeRoundedRect(x, y, cbw, cbh, radius);
     }
 
     private createFarm(centerX: number) {
@@ -141,20 +153,32 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private createPlantButton(x: number, y: number) {
-        this.add.rectangle(x, y + 6, 220, 86, 0x000000, 0.25).setOrigin(0.5);
-        this.buttonBg = this.add.rectangle(x, y, 200, 80, 0x8d6e63).setStrokeStyle(4, 0x5d4037).setOrigin(0.5);
+        const shadow = this.add.rectangle(x, y + 8, 200, 80, 0x3e2723, 0.4).setOrigin(0.5);
+        
+        this.buttonBg = this.add.rectangle(x, y, 200, 80, 0x689f38)
+            .setStrokeStyle(4, 0x33691e)
+            .setOrigin(0.5);
 
         this.buttonText = this.add.text(x, y, "Plant", {
-            fontSize: "22px",
+            fontSize: "28px",
             fontFamily: "'Inter', Arial, sans-serif",
             color: "#ffffff",
-            fontStyle: "700",
-            stroke: "#000000",
-            strokeThickness: 3
+            fontStyle: "900",
+            stroke: "#33691e",
+            strokeThickness: 4,
+            shadow: { offsetX: 0, offsetY: 2, color: '#000', blur: 0, stroke: false, fill: true }
         }).setOrigin(0.5);
 
         this.buttonBg.setInteractive({ useHandCursor: true })
-            .on("pointerdown", () => this.handlePlantAction(this.buttonBg, this.buttonText));
+            .on("pointerdown", () => this.handlePlantAction(this.buttonBg, this.buttonText, shadow))
+            .on("pointerover", () => {
+                this.buttonBg.setFillStyle(0x7cb342);
+                this.game.canvas.style.cursor = "pointer";
+            })
+            .on("pointerout", () => {
+                this.buttonBg.setFillStyle(0x689f38);
+                this.game.canvas.style.cursor = "default";
+            });
     }
 
     private setupResizeHandler() {
@@ -181,11 +205,11 @@ export class ClickerScene extends Phaser.Scene {
         });
     }
 
-    private handlePlantAction(bg: Phaser.GameObjects.Rectangle, text: Phaser.GameObjects.Text) {
+    private handlePlantAction(bg: Phaser.GameObjects.Rectangle, text: Phaser.GameObjects.Text, shadow?: Phaser.GameObjects.Rectangle) {
         if (this.isBusy) return;
 
         this.isBusy = true;
-        this.playClickFeedback(bg, text);
+        this.playClickFeedback(bg, text, shadow);
         this.carrot.play("growing");
 
         this.tweens.add({
@@ -197,10 +221,11 @@ export class ClickerScene extends Phaser.Scene {
         });
     }
 
-    private playClickFeedback(bg: Phaser.GameObjects.Rectangle, text: Phaser.GameObjects.Text) {
+    private playClickFeedback(bg: Phaser.GameObjects.Rectangle, text: Phaser.GameObjects.Text, shadow?: Phaser.GameObjects.Rectangle) {
+        const targets = shadow ? [bg, text, shadow] : [bg, text];
         this.tweens.add({
-            targets: [bg, text],
-            scale: 0.95,
+            targets: targets,
+            y: '+=4',
             duration: 50,
             yoyo: true
         });
