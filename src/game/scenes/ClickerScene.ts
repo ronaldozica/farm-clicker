@@ -36,7 +36,7 @@ export class ClickerScene extends Phaser.Scene {
         });
 
         this.load.spritesheet("wheat-sheet", "wheat.png", {
-            frameWidth: 160,
+            frameWidth: 110,
             frameHeight: 180
         });
     }
@@ -76,7 +76,7 @@ export class ClickerScene extends Phaser.Scene {
         });
         this.anims.create({
             key: "wheat-growing",
-            frames: this.anims.generateFrameNumbers("wheat-sheet", { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers("wheat-sheet", { start: 0, end: 4 }),
             frameRate: 5, repeat: 0
         });
     }
