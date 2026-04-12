@@ -21,15 +21,17 @@ export class GameState extends Phaser.Events.EventEmitter {
         return this._instance;
     }
 
-    addClick(cropType: 'grass' | 'wheat' | 'carrot') {
+    addClick(cropType: 'grass' | 'wheat' | 'carrot', reward?: number) {
+        const finalReward = reward ?? 1;
+
         this.totalClicks++;
         
         if (cropType === 'carrot') {
-            this.carrots++;
+            this.carrots += finalReward;
         } else if (cropType === 'wheat') {
-            this.wheat++;
+            this.wheat += finalReward;
         } else if (cropType === 'grass') {
-            this.grass++;
+            this.grass += finalReward;
         }
 
         this.emit('scoreChanged', { grass: this.grass, wheat: this.wheat, carrots: this.carrots });

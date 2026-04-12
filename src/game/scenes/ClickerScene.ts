@@ -15,6 +15,8 @@ export class ClickerScene extends Phaser.Scene {
     private buttonBg!: Phaser.GameObjects.Rectangle;
     private buttonText!: Phaser.GameObjects.Text;
     private counterBg!: Phaser.GameObjects.Graphics;
+    private lastGrassFrame: number = -1;
+    private trunkHealth: number = 10;
 
     private selectedCrop: 'grass' | 'wheat' | 'carrot' = 'carrot';
     private selectorGrassBg!: Phaser.GameObjects.Rectangle;
@@ -31,7 +33,11 @@ export class ClickerScene extends Phaser.Scene {
     preload() {
         this.load.image("grass-bg", "grass-bg.png");
         this.load.image("dirt", "dirt-bg.png");
-        this.load.image("grass-item", "grass.png");
+
+        this.load.spritesheet("grass-item", "grass.png", {
+            frameWidth: 100,
+            frameHeight: 100
+        });
 
         this.load.spritesheet("carrot-sheet", "carrot.png", {
             frameWidth: 320,
@@ -197,16 +203,18 @@ export class ClickerScene extends Phaser.Scene {
         this.updateSelectorVisuals();
     }
 
+
     private switchCrop(crop: 'grass' | 'wheat' | 'carrot') {
         if (this.isBusy || this.selectedCrop === crop) return;
-
         this.selectedCrop = crop;
 
         if (crop === 'grass') {
             this.cropSprite.anims.stop();
             this.cropSprite.setTexture("grass-item");
-            this.cropSprite.setScale(1);
+            this.cropSprite.setFrame(this.getNextGrassFrame());
+            this.cropSprite.setScale(1.2);
             this.cropSprite.y = 50;
+            this.trunkHealth = 10;
         } else {
             this.cropSprite.play(`${crop}-idle`);
 
@@ -220,6 +228,35 @@ export class ClickerScene extends Phaser.Scene {
         }
 
         this.updateSelectorVisuals();
+        this.updateButtonText();
+    }
+
+    private updateButtonText() {
+        if (this.selectedCrop !== 'grass') {
+            this.buttonText.setText("Plant");
+        } else {
+            const isTrunk = this.cropSprite.frame.name == "9";
+            this.buttonText.setText(isTrunk ? "Break" : "Cut");
+        }
+    }
+
+    private getNextGrassFrame(): number {
+        let nextFrame: number;
+        const commonFrames = [0, 1, 2, 3, 4, 5];
+
+        do {
+            const rand = Math.random();
+            if (rand < 0.05) nextFrame = 6;
+            else if (rand < 0.10) nextFrame = 7;
+            else if (rand < 0.15) nextFrame = 8;
+            else if (rand < 0.20) nextFrame = 9;
+            else {
+                nextFrame = commonFrames[Math.floor(Math.random() * commonFrames.length)];
+            }
+        } while (nextFrame === this.lastGrassFrame);
+
+        this.lastGrassFrame = nextFrame;
+        return nextFrame;
     }
 
     private updateSelectorVisuals() {
@@ -248,7 +285,13 @@ export class ClickerScene extends Phaser.Scene {
             .setStrokeStyle(4, 0x33691e)
             .setOrigin(0.5);
 
-        this.buttonText = this.add.text(x, y, "Plant", {
+        let text = "Plant";
+        if (this.selectedCrop === 'grass') {
+            const isTrunk = this.cropSprite.frame.name === "9";
+            text = isTrunk ? "Break" : "Cut";
+        }
+
+        this.buttonText = this.add.text(x, y, text, {
             fontSize: "28px",
             fontFamily: "'Inter', Arial, sans-serif",
             color: "#ffffff",
@@ -306,13 +349,13 @@ export class ClickerScene extends Phaser.Scene {
         if (this.isBusy) return;
 
         if (this.selectedCrop === 'grass') {
-            this.playClickFeedback(bg, text, shadow);
+            this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
             this.handleHarvest();
             return;
         }
 
         this.isBusy = true;
-        this.playClickFeedback(bg, text, shadow);
+        this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
 
         const baseDurations = { carrot: 1000, wheat: 500, grass: 0 };
         const baseTime = baseDurations[this.selectedCrop];
@@ -335,8 +378,7 @@ export class ClickerScene extends Phaser.Scene {
         });
     }
 
-    private playClickFeedback(bg: Phaser.GameObjects.Rectangle, text: Phaser.GameObjects.Text, shadow?: Phaser.GameObjects.Rectangle) {
-        const targets = shadow ? [bg, text, shadow] : [bg, text];
+    private playClickFeedback(targets: any | any[]) {
         this.tweens.add({
             targets: targets,
             y: '+=4',
@@ -347,12 +389,38 @@ export class ClickerScene extends Phaser.Scene {
 
     private handleHarvest() {
         this.drawProgressBar(0);
-        GameState.instance.addClick(this.selectedCrop);
 
-        if (this.selectedCrop !== 'grass') {
+        if (this.selectedCrop === 'grass') {
+            const currentFrame = parseInt(this.cropSprite.frame.name);
+
+            if (currentFrame === 9) {
+                this.trunkHealth--;
+
+                if (this.trunkHealth > 0) {
+                    this.playClickFeedback(this.cropSprite);
+                    this.isBusy = false;
+                    return;
+                }
+
+                GameState.instance.addClick('grass', 25);
+                this.trunkHealth = 10;
+            }
+            else {
+                let reward = 1;
+                if (currentFrame === 6) reward = 5;
+                else if (currentFrame === 7) reward = 10;
+                else if (currentFrame === 8) reward = 20;
+
+                GameState.instance.addClick('grass', reward);
+            }
+
+            this.cropSprite.setFrame(this.getNextGrassFrame());
+        } else {
+            GameState.instance.addClick(this.selectedCrop);
             this.cropSprite.play(`${this.selectedCrop}-idle`);
         }
 
+        this.updateButtonText();
         this.isBusy = false;
     }
 
