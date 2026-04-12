@@ -22,7 +22,7 @@ export class ShopUI {
 
     private render() {
         this.modal.innerHTML = `
-            <h2>Árvore de Pesquisa</h2>
+            <h2>Upgrade shop</h2>
             <button id="close-shop" style="position: absolute; right: 20px; top: 20px; cursor: pointer;">X</button>
             <div id="upgrade-tree"></div>
         `;

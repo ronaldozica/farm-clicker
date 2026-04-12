@@ -28,6 +28,11 @@ export class ClickerScene extends Phaser.Scene {
             frameWidth: 320,
             frameHeight: 640
         });
+
+        this.load.spritesheet("wheat-sheet", "wheat.png", {
+            frameWidth: 160,
+            frameHeight: 180
+        });
     }
 
     create() {
@@ -49,14 +54,14 @@ export class ClickerScene extends Phaser.Scene {
     private createAnimations() {
         this.anims.create({
             key: "idle",
-            frames: [{ key: "carrot-sheet", frame: 2 }],
+            frames: [{ key: "wheat-sheet", frame: 0 }],
             frameRate: 1,
             repeat: -1
         });
 
         this.anims.create({
             key: "growing",
-            frames: this.anims.generateFrameNumbers("carrot-sheet", { start: 3, end: 7 }),
+            frames: this.anims.generateFrameNumbers("wheat-sheet", { start: 0, end: 3 }),
             frameRate: 5,
             repeat: 0
         });
@@ -136,7 +141,7 @@ export class ClickerScene extends Phaser.Scene {
 
         this.farmContainer = this.add.container(centerX, carrotY);
 
-        this.carrot = this.add.sprite(0, 0, "carrot-sheet").setScale(0.5).play("idle");
+        this.carrot = this.add.sprite(0, 0, "wheat-sheet").setScale(0.5).play("idle");
 
         const padding = 24;
         const dirtW = Math.round(this.carrot.displayWidth + padding * 2);
