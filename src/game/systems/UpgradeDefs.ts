@@ -32,25 +32,24 @@ export const UPGRADES: Record<string, UpgradeDef> = {
         value: 300,
         icon: '✨'
     },
-
-    'crop_potato': {
-        id: 'crop_potato',
-        name: 'Potato Seeds',
-        description: 'Unlocks potato planting.',
-        cost: 100,
-        requires: [],
-        type: 'crop',
-        value: 'potato',
-        icon: '🥔'
-    },
-    'crop_pumpkin': {
-        id: 'crop_pumpkin',
-        name: 'Pumpkin Seeds',
-        description: 'Unlocks pumpkin planting.',
-        cost: 300,
-        requires: ['crop_potato'],
-        type: 'crop',
-        value: 'pumpkin',
-        icon: '🎃'
-    }
+    // 'crop_potato': {
+    //     id: 'crop_potato',
+    //     name: 'Potato Seeds',
+    //     description: 'Unlocks potato planting.',
+    //     cost: 100,
+    //     requires: [],
+    //     type: 'crop',
+    //     value: 'potato',
+    //     icon: '🥔'
+    // },
+    // 'crop_pumpkin': {
+    //     id: 'crop_pumpkin',
+    //     name: 'Pumpkin Seeds',
+    //     description: 'Unlocks pumpkin planting.',
+    //     cost: 300,
+    //     requires: ['crop_potato'],
+    //     type: 'crop',
+    //     value: 'pumpkin',
+    //     icon: '🎃'
+    // }
 };
