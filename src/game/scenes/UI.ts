@@ -53,13 +53,13 @@ export class ShopUI {
                     <small>${upgrade.description}</small>
                 </div>
                 ${!isPurchased ? 
-                    `<button 
+        `<button 
                         ${(!hasRequirements || !canAfford) ? 'disabled' : ''} 
                         id="btn-${upgrade.id}">
                         Buy (${upgrade.cost})
                     </button>` 
-                    : '<span style="margin-left:auto; color: #4caf50; font-weight: bold;">Purchased ✓</span>'
-                }
+        : '<span style="margin-left:auto; color: #4caf50; font-weight: bold;">Purchased ✓</span>'
+}
             `;
 
             treeContainer.appendChild(node);

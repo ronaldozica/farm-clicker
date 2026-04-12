@@ -131,7 +131,7 @@ export class ClickerScene extends Phaser.Scene {
 
     private createFarm(centerX: number) {
         const fullH = this.cameras.main.height;
-        const carrotOffset = 75
+        const carrotOffset = 75;
         const carrotY = fullH / 2 - carrotOffset;
 
         this.farmContainer = this.add.container(centerX, carrotY);
@@ -188,8 +188,8 @@ export class ClickerScene extends Phaser.Scene {
 
     private setupResizeHandler() {
         this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
-            const w = (gameSize as any).width || this.cameras.main.width;
-            const h = (gameSize as any).height || this.cameras.main.height;
+            const w = gameSize.width || this.cameras.main.width;
+            const h = gameSize.height || this.cameras.main.height;
             const centerX = w / 2;
 
             this.bg.setDisplaySize(w, h);
