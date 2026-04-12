@@ -5,8 +5,9 @@ export class GameState extends Phaser.Events.EventEmitter {
     private static _instance: GameState;
     public purchasedUpgrades: string[] = [];
     
-    public carrots: number = 0;
+    public grass: number = 0; 
     public wheat: number = 0; 
+    public carrots: number = 0;
     public totalClicks: number = 0;
 
     private constructor() {
@@ -20,16 +21,18 @@ export class GameState extends Phaser.Events.EventEmitter {
         return this._instance;
     }
 
-    addClick(cropType: 'carrot' | 'wheat') {
+    addClick(cropType: 'grass' | 'wheat' | 'carrot') {
         this.totalClicks++;
         
         if (cropType === 'carrot') {
             this.carrots++;
         } else if (cropType === 'wheat') {
             this.wheat++;
+        } else if (cropType === 'grass') {
+            this.grass++;
         }
 
-        this.emit('scoreChanged', { wheat: this.wheat, carrots: this.carrots });
+        this.emit('scoreChanged', { grass: this.grass, wheat: this.wheat, carrots: this.carrots });
         this.emit('statsChanged', this.totalClicks);
     }
 
