@@ -4,10 +4,10 @@ import { UPGRADES, type UpgradeDef } from './UpgradeDefs';
 export class GameState extends Phaser.Events.EventEmitter {
     private static _instance: GameState;
     public purchasedUpgrades: string[] = [];
+    
     public carrots: number = 0;
+    public wheat: number = 0; 
     public totalClicks: number = 0;
-
-    clicks: number = 0;
 
     private constructor() {
         super();
@@ -20,12 +20,16 @@ export class GameState extends Phaser.Events.EventEmitter {
         return this._instance;
     }
 
-    addClick() {
+    addClick(cropType: 'carrot' | 'wheat') {
         this.totalClicks++;
-        this.carrots++;
-        this.clicks++;
+        
+        if (cropType === 'carrot') {
+            this.carrots++;
+        } else if (cropType === 'wheat') {
+            this.wheat++;
+        }
 
-        this.emit('scoreChanged', this.carrots);
+        this.emit('scoreChanged', { wheat: this.wheat, carrots: this.carrots });
         this.emit('statsChanged', this.totalClicks);
     }
 
@@ -34,6 +38,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 
         if (!upgrade) return false;
         if (this.purchasedUpgrades.includes(upgradeId)) return false;
+        
         if (this.carrots < upgrade.cost) return false;
 
         const hasRequirements = upgrade.requires.every(req => this.purchasedUpgrades.includes(req));
@@ -44,7 +49,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 
         this.applyUpgradeEffect(upgrade);
 
-        this.emit("scoreChanged", this.carrots);
+        this.emit("scoreChanged", { wheat: this.wheat, carrots: this.carrots });
         this.emit("upgradesChanged");
         return true;
     }

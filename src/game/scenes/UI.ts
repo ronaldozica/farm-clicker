@@ -37,7 +37,7 @@ export class ShopUI {
         Object.values(UPGRADES).forEach(upgrade => {
             const isPurchased = GameState.instance.purchasedUpgrades.includes(upgrade.id);
             const hasRequirements = upgrade.requires.every(req => GameState.instance.purchasedUpgrades.includes(req));
-            const canAfford = GameState.instance.clicks >= upgrade.cost;
+            const canAfford = GameState.instance.carrots >= upgrade.cost;
 
             let statusClass = 'available';
             if (isPurchased) statusClass = 'purchased';

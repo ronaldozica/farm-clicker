@@ -5,7 +5,7 @@ const SAVE_KEY = "clicker-save";
 export class SaveSystem {
     static save() {
         const data = {
-            clicks: GameState.instance.clicks,
+            wheat: GameState.instance.wheat,
             carrots: GameState.instance.carrots,
             purchasedUpgrades: GameState.instance.purchasedUpgrades,
         };
@@ -20,7 +20,7 @@ export class SaveSystem {
 
         const data = JSON.parse(raw);
 
-        GameState.instance.clicks = data.clicks ?? 0;
+        GameState.instance.wheat = data.wheat ?? 0;
         GameState.instance.carrots = data.carrots ?? 0;
         GameState.instance.purchasedUpgrades = data.purchasedUpgrades ?? [];
 
