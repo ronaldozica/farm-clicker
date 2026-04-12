@@ -29,9 +29,9 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image("grass-bg", "grass.png");
-        this.load.image("dirt", "dirt.png");
-        this.load.image("grass-item", "tallGrass.png");
+        this.load.image("grass-bg", "grass-bg.png");
+        this.load.image("dirt", "dirt-bg.png");
+        this.load.image("grass-item", "grass.png");
 
         this.load.spritesheet("carrot-sheet", "carrot.png", {
             frameWidth: 320,
