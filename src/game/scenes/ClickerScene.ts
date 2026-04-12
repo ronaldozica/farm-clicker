@@ -40,7 +40,7 @@ export class ClickerScene extends Phaser.Scene {
 
     private setupEventListeners() {
         GameState.instance.on("scoreChanged", (carrots: number) => {
-            this.counterText.setText(`Carrots: ${carrots}`);
+            this.counterText.setText(`🥕: ${carrots}`);
             this.updateCounterBackground();
             SaveSystem.save();
         });
@@ -75,7 +75,7 @@ export class ClickerScene extends Phaser.Scene {
         this.createBackground();
         this.createScoreUI(centerX, counterY);
         this.createFarm(centerX);
-        
+
         this.progressBar = this.add.graphics();
         this.createPlantButton(centerX, buttonY);
         this.createShopButton(centerX + shopOffset, buttonY);
@@ -97,7 +97,7 @@ export class ClickerScene extends Phaser.Scene {
 
     private createScoreUI(centerX: number, counterY: number) {
         this.counterBg = this.add.graphics();
-        this.counterText = this.add.text(centerX, counterY, `Carrots: ${GameState.instance.carrots}`, {
+        this.counterText = this.add.text(centerX, counterY, `🥕: ${GameState.instance.carrots}`, {
             fontSize: "32px",
             fontFamily: "'Inter', 'Nunito', sans-serif",
             color: "#4e342e",
@@ -215,12 +215,21 @@ export class ClickerScene extends Phaser.Scene {
 
         this.isBusy = true;
         this.playClickFeedback(bg, text, shadow);
-        this.carrot.play("growing");
+
+        const currentDuration = 1000 - GameState.instance.getGlobalSpeedReduction();
+
+        const totalFrames = 5;
+        const dynamicFrameRate = (totalFrames / currentDuration) * 1000;
+
+        this.carrot.play({
+            key: "growing",
+            frameRate: dynamicFrameRate
+        });
 
         this.tweens.add({
             targets: { progress: 0 },
             progress: 1,
-            duration: 1000 - GameState.instance.getGlobalSpeedReduction(),
+            duration: currentDuration,
             onUpdate: (_, target) => this.drawProgressBar(target.progress),
             onComplete: () => this.handleHarvest()
         });
