@@ -19,12 +19,16 @@ export class ClickerScene extends Phaser.Scene {
     private trunkHealth: number = 10;
 
     private selectedCrop: 'grass' | 'wheat' | 'carrot' = 'carrot';
-    private selectorGrassBg!: Phaser.GameObjects.Rectangle;
-    private selectorWheatBg!: Phaser.GameObjects.Rectangle;
-    private selectorCarrotBg!: Phaser.GameObjects.Rectangle;
-    private iconGrass!: Phaser.GameObjects.Text;
-    private iconWheat!: Phaser.GameObjects.Text;
-    private iconCarrot!: Phaser.GameObjects.Text;
+
+    private selectedCropIndex: number = 2; // 0=grass, 1=wheat, 2=carrot
+    private readonly crops: Array<'grass' | 'wheat' | 'carrot'> = ['grass', 'wheat', 'carrot'];
+
+    private carouselBg!: Phaser.GameObjects.Rectangle;
+    private carouselLabel!: Phaser.GameObjects.Text;
+    private carouselIcon!: Phaser.GameObjects.Text;
+    private btnPrev!: Phaser.GameObjects.Text;
+    private btnNext!: Phaser.GameObjects.Text;
+    private dotGraphics!: Phaser.GameObjects.Graphics;
 
     constructor() {
         super("clicker-scene");
@@ -185,24 +189,75 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private createCropSelector(centerX: number, buttonY: number) {
-        const selectorY = buttonY - 80;
+        const selectorY = buttonY - 150;
+        const cardW = 80;
+        const cardH = 80;
+        const arrowOffset = 60;
 
-        this.selectorGrassBg = this.add.rectangle(centerX - 120, selectorY, 60, 60, 0xfff8e1).setStrokeStyle(3, 0x8d6e63).setInteractive({ useHandCursor: true });
-        this.iconGrass = this.add.text(centerX - 120, selectorY, "🌱", { fontSize: "32px" }).setOrigin(0.5);
+        this.carouselBg = this.add.rectangle(centerX, selectorY, cardW, cardH, 0xfff8e1)
+            .setStrokeStyle(3, 0x8d6e63)
+            .setDepth(5);
 
-        this.selectorWheatBg = this.add.rectangle(centerX - 40, selectorY, 60, 60, 0xfff8e1).setStrokeStyle(3, 0x8d6e63).setInteractive({ useHandCursor: true });
-        this.iconWheat = this.add.text(centerX - 40, selectorY, "🌾", { fontSize: "32px" }).setOrigin(0.5);
+        this.carouselIcon = this.add.text(centerX, selectorY - 10, '', { fontSize: '32px' })
+            .setOrigin(0.5)
+            .setDepth(6);
 
-        this.selectorCarrotBg = this.add.rectangle(centerX + 40, selectorY, 60, 60, 0xfff8e1).setStrokeStyle(3, 0x8d6e63).setInteractive({ useHandCursor: true });
-        this.iconCarrot = this.add.text(centerX + 40, selectorY, "🥕", { fontSize: "32px" }).setOrigin(0.5);
+        this.carouselLabel = this.add.text(centerX, selectorY + 22, '', {
+            fontSize: '13px',
+            fontFamily: "'Inter', sans-serif",
+            color: '#6d4c41',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(6);
 
-        this.selectorGrassBg.on('pointerdown', () => this.switchCrop('grass'));
-        this.selectorWheatBg.on('pointerdown', () => this.switchCrop('wheat'));
-        this.selectorCarrotBg.on('pointerdown', () => this.switchCrop('carrot'));
+        this.btnPrev = this.add.text(centerX - arrowOffset, selectorY, '‹', {
+            fontSize: '36px',
+            fontFamily: "'Inter', sans-serif",
+            color: '#4e342e',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(6);
 
-        this.updateSelectorVisuals();
+        this.btnNext = this.add.text(centerX + arrowOffset, selectorY, '›', {
+            fontSize: '36px',
+            fontFamily: "'Inter', sans-serif",
+            color: '#4e342e',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(6);
+
+        this.dotGraphics = this.add.graphics().setDepth(6);
+
+        this.btnPrev.on('pointerdown', () => {
+            this.selectedCropIndex = (this.selectedCropIndex - 1 + this.crops.length) % this.crops.length;
+            this.switchCrop(this.crops[this.selectedCropIndex]);
+        });
+        this.btnNext.on('pointerdown', () => {
+            this.selectedCropIndex = (this.selectedCropIndex + 1) % this.crops.length;
+            this.switchCrop(this.crops[this.selectedCropIndex]);
+        });
+
+        this.updateCarouselVisuals(centerX, selectorY);
     }
 
+    private updateCarouselVisuals(centerX: number, selectorY: number) {
+        const icons = ['🌱', '🌾', '🥕'];
+        const labels = ['Grass', 'Wheat', 'Carrot'];
+
+        this.carouselIcon.setText(icons[this.selectedCropIndex]);
+        this.carouselLabel.setText(labels[this.selectedCropIndex]);
+
+        // this.carouselBg.setFillStyle(0xffeb3b);
+
+        this.dotGraphics.clear();
+        const dotSpacing = 14;
+        const totalDots = this.crops.length;
+        const startX = centerX - ((totalDots - 1) * dotSpacing) / 2;
+        const dotsY = selectorY + 52;
+
+        this.crops.forEach((_, i) => {
+            const color = i === this.selectedCropIndex ? 0x4e342e : 0xbcaaa4;
+            this.dotGraphics.fillStyle(color);
+            this.dotGraphics.fillCircle(startX + i * dotSpacing, dotsY, 4);
+        });
+    }
 
     private switchCrop(crop: 'grass' | 'wheat' | 'carrot') {
         if (this.isBusy || this.selectedCrop === crop) return;
@@ -227,7 +282,10 @@ export class ClickerScene extends Phaser.Scene {
             }
         }
 
-        this.updateSelectorVisuals();
+        const centerX = this.cameras.main.width / 2;
+        const buttonY = this.cameras.main.height - (this.cameras.main.height * 0.1);
+
+        this.updateCarouselVisuals(centerX, buttonY - 150);
         this.updateButtonText();
     }
 
@@ -257,25 +315,6 @@ export class ClickerScene extends Phaser.Scene {
 
         this.lastGrassFrame = nextFrame;
         return nextFrame;
-    }
-
-    private updateSelectorVisuals() {
-        const selectedColor = 0xffeb3b;
-        const defaultColor = 0xfff8e1;
-
-        if (this.selectedCrop === 'carrot') {
-            this.selectorGrassBg.setFillStyle(defaultColor);
-            this.selectorWheatBg.setFillStyle(defaultColor);
-            this.selectorCarrotBg.setFillStyle(selectedColor);
-        } else if (this.selectedCrop === 'wheat') {
-            this.selectorGrassBg.setFillStyle(defaultColor);
-            this.selectorWheatBg.setFillStyle(selectedColor);
-            this.selectorCarrotBg.setFillStyle(defaultColor);
-        } else if (this.selectedCrop === 'grass') {
-            this.selectorGrassBg.setFillStyle(selectedColor);
-            this.selectorWheatBg.setFillStyle(defaultColor);
-            this.selectorCarrotBg.setFillStyle(defaultColor);
-        }
     }
 
     private createPlantButton(x: number, y: number) {
@@ -335,12 +374,12 @@ export class ClickerScene extends Phaser.Scene {
                 this.buttonText.y = h - 80;
 
                 const selectorY = h - 160;
-                this.selectorGrassBg.setPosition(centerX + 80, selectorY);
-                this.iconGrass.setPosition(centerX + 80, selectorY);
-                this.selectorWheatBg.setPosition(centerX + 40, selectorY);
-                this.iconWheat.setPosition(centerX + 40, selectorY);
-                this.selectorCarrotBg.setPosition(centerX - 40, selectorY);
-                this.iconCarrot.setPosition(centerX - 40, selectorY);
+                this.carouselBg.setPosition(centerX, selectorY);
+                this.carouselIcon.setPosition(centerX, selectorY - 10);
+                this.carouselLabel.setPosition(centerX, selectorY + 22);
+                this.btnPrev.setPosition(centerX - 60, selectorY);
+                this.btnNext.setPosition(centerX + 60, selectorY);
+                this.updateCarouselVisuals(centerX, selectorY);
             }
         });
     }
