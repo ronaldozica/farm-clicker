@@ -1,55 +1,65 @@
-export type UpgradeType = 'speed' | 'tile' | 'crop';
+import type { CropId } from "./CropDefs";
+
+export type UpgradeType = "speed" | "tile" | "crop";
 
 export interface UpgradeDef {
     id: string;
     name: string;
     description: string;
     cost: number;
+    costCrop: CropId;
     requires: string[];
     type: UpgradeType;
-    value: number | string;
+    value: number | CropId;
+    targetCrop?: CropId;
     icon: string;
 }
 
 export const UPGRADES: Record<string, UpgradeDef> = {
-    'speed_1': {
-        id: 'speed_1',
-        name: 'Efficient watering can',
-        description: 'Reduces growth time by 200ms.',
-        cost: 50,
+    crop_wheat: {
+        id: "crop_wheat",
+        name: "Buy wheat",
+        description: "Unlocks the planting of wheat.",
+        cost: 500,
+        costCrop: "grass",
         requires: [],
-        type: 'speed',
+        type: "crop",
+        value: "wheat",
+        icon: "\u{1F33D}"
+    },
+    crop_carrot: {
+        id: "crop_carrot",
+        name: "Buy carrot",
+        description: "Unlocks the planting of carrot.",
+        cost: 500,
+        costCrop: "wheat",
+        requires: ["crop_wheat"],
+        type: "crop",
+        value: "carrot",
+        icon: "\u{1F955}"
+    },
+    speed_wheat: {
+        id: "speed_wheat",
+        name: "Wheat grows faster",
+        description: "Reduces the growth time of wheat by 200ms.",
+        cost: 1000,
+        costCrop: "grass",
+        requires: ["crop_wheat"],
+        type: "speed",
         value: 200,
-        icon: '💧'
+        targetCrop: "wheat",
+        icon: "\u{1F4A7}"
     },
-    'speed_2': {
-        id: 'speed_2',
-        name: 'Premium Fertilizer',
-        description: 'Reduces growth time by an additional 300ms.',
-        cost: 150,
-        requires: ['speed_1'],
-        type: 'speed',
-        value: 300,
-        icon: '✨'
-    },
-    // 'crop_potato': {
-    //     id: 'crop_potato',
-    //     name: 'Potato Seeds',
-    //     description: 'Unlocks potato planting.',
-    //     cost: 100,
-    //     requires: [],
-    //     type: 'crop',
-    //     value: 'potato',
-    //     icon: '🥔'
-    // },
-    // 'crop_pumpkin': {
-    //     id: 'crop_pumpkin',
-    //     name: 'Pumpkin Seeds',
-    //     description: 'Unlocks pumpkin planting.',
-    //     cost: 300,
-    //     requires: ['crop_potato'],
-    //     type: 'crop',
-    //     value: 'pumpkin',
-    //     icon: '🎃'
-    // }
+    speed_carrot: {
+        id: "speed_carrot",
+        name: "Carrot grows faster",
+        description: "Reduces the growth time of carrot by 200ms.",
+        cost: 1000,
+        costCrop: "wheat",
+        requires: ["crop_carrot"],
+        type: "speed",
+        value: 200,
+        targetCrop: "carrot",
+        icon: "\u{1F4A7}"
+    }
 };

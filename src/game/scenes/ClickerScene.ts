@@ -28,6 +28,7 @@ export class ClickerScene extends Phaser.Scene {
     private growthTween?: Phaser.Tweens.Tween;
 
     private readonly crops = CROP_IDS;
+    private availableCrops: CropId[] = [...CROP_IDS];
     private selectedCrop: CropId = DEFAULT_CROP_ID;
     private selectedCropIndex: number = Math.max(0, CROP_IDS.indexOf(DEFAULT_CROP_ID));
 
@@ -63,6 +64,11 @@ export class ClickerScene extends Phaser.Scene {
             this.updateCounterBackground();
             SaveSystem.save();
         });
+
+        GameState.instance.on("upgradesChanged", () => {
+            this.refreshAvailableCrops();
+            SaveSystem.save();
+        });
     }
 
     private createAnimations() {
@@ -84,12 +90,13 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private formatScoreText(crops: CropAmounts) {
-        return this.crops
+        return this.availableCrops
             .map(cropId => `${getCropDef(cropId).icon}: ${crops[cropId] ?? 0}`)
             .join(" | ");
     }
 
     private initializeUI() {
+        this.refreshAvailableCrops();
         const fullH = this.cameras.main.height;
         const centerX = this.cameras.main.width / 2;
         const counterY = fullH * 0.1;
@@ -222,12 +229,12 @@ export class ClickerScene extends Phaser.Scene {
         this.dotGraphics = this.add.graphics().setDepth(6);
 
         this.btnPrev.on("pointerdown", () => {
-            this.selectedCropIndex = (this.selectedCropIndex - 1 + this.crops.length) % this.crops.length;
-            this.switchCrop(this.crops[this.selectedCropIndex]);
+            this.selectedCropIndex = (this.selectedCropIndex - 1 + this.availableCrops.length) % this.availableCrops.length;
+            this.switchCrop(this.availableCrops[this.selectedCropIndex]);
         });
         this.btnNext.on("pointerdown", () => {
-            this.selectedCropIndex = (this.selectedCropIndex + 1) % this.crops.length;
-            this.switchCrop(this.crops[this.selectedCropIndex]);
+            this.selectedCropIndex = (this.selectedCropIndex + 1) % this.availableCrops.length;
+            this.switchCrop(this.availableCrops[this.selectedCropIndex]);
         });
 
         this.updateCarouselVisuals(centerX, selectorY);
@@ -240,11 +247,11 @@ export class ClickerScene extends Phaser.Scene {
 
         this.dotGraphics.clear();
         const dotSpacing = 14;
-        const totalDots = this.crops.length;
+        const totalDots = this.availableCrops.length;
         const startX = centerX - ((totalDots - 1) * dotSpacing) / 2;
         const dotsY = selectorY + 52;
 
-        this.crops.forEach((_, i) => {
+        this.availableCrops.forEach((_, i) => {
             const color = i === this.selectedCropIndex ? 0x4e342e : 0xbcaaa4;
             this.dotGraphics.fillStyle(color);
             this.dotGraphics.fillCircle(startX + i * dotSpacing, dotsY, 4);
@@ -262,6 +269,28 @@ export class ClickerScene extends Phaser.Scene {
 
         this.updateCarouselVisuals(centerX, buttonY - 120);
         this.updateButtonText();
+    }
+
+    private refreshAvailableCrops() {
+        this.availableCrops = CROP_IDS.filter(cropId => GameState.instance.isCropUnlocked(cropId));
+        if (!this.availableCrops.includes(this.selectedCrop)) {
+            this.selectedCrop = this.availableCrops[0] ?? DEFAULT_CROP_ID;
+            this.clearGrowthState();
+            if (this.cropSprite) {
+                this.applyCropSprite(this.selectedCrop);
+            }
+        }
+
+        this.selectedCropIndex = Math.max(0, this.availableCrops.indexOf(this.selectedCrop));
+
+        if (this.carouselBg) {
+            const centerX = this.cameras.main.width / 2;
+            const buttonY = this.cameras.main.height - (this.cameras.main.height * 0.1);
+            this.counterText.setText(this.formatScoreText(GameState.instance.getCropAmounts()));
+            this.updateCounterBackground();
+            this.updateCarouselVisuals(centerX, buttonY - 120);
+            this.updateButtonText();
+        }
     }
 
     private clearGrowthState() {
@@ -417,7 +446,7 @@ export class ClickerScene extends Phaser.Scene {
         this.cropFullyGrown = false;
         this.drawProgressBar(0);
 
-        const currentDuration = Math.max(50, crop.growthDuration - GameState.instance.getGlobalSpeedReduction());
+        const currentDuration = Math.max(50, crop.growthDuration - GameState.instance.getGrowthSpeedReduction(this.selectedCrop));
         const totalFrames = crop.growthFrames.end - crop.growthFrames.start + 1;
         const dynamicFrameRate = (totalFrames / currentDuration) * 1000;
 

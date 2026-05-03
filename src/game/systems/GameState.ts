@@ -1,10 +1,11 @@
 import Phaser from "phaser";
-import { CROP_IDS, createEmptyCropAmounts, type CropId, type CropAmounts } from './CropDefs';
-import { UPGRADES, type UpgradeDef } from './UpgradeDefs';
+import { CROP_IDS, STARTING_CROP_IDS, createEmptyCropAmounts, type CropAmounts, type CropId } from "./CropDefs";
+import { UPGRADES, type UpgradeDef } from "./UpgradeDefs";
 
 export class GameState extends Phaser.Events.EventEmitter {
     private static _instance: GameState;
     public purchasedUpgrades: string[] = [];
+    public unlockedCrops: CropId[] = [...STARTING_CROP_IDS];
     public cropAmounts: CropAmounts = createEmptyCropAmounts();
     public totalClicks: number = 0;
 
@@ -20,27 +21,27 @@ export class GameState extends Phaser.Events.EventEmitter {
     }
 
     get grass(): number {
-        return this.getCropAmount('grass');
+        return this.getCropAmount("grass");
     }
 
     set grass(amount: number) {
-        this.setCropAmount('grass', amount);
+        this.setCropAmount("grass", amount);
     }
 
     get wheat(): number {
-        return this.getCropAmount('wheat');
+        return this.getCropAmount("wheat");
     }
 
     set wheat(amount: number) {
-        this.setCropAmount('wheat', amount);
+        this.setCropAmount("wheat", amount);
     }
 
     get carrots(): number {
-        return this.getCropAmount('carrot');
+        return this.getCropAmount("carrot");
     }
 
     set carrots(amount: number) {
-        this.setCropAmount('carrot', amount);
+        this.setCropAmount("carrot", amount);
     }
 
     getCropAmount(cropType: CropId): number {
@@ -58,14 +59,24 @@ export class GameState extends Phaser.Events.EventEmitter {
         }, {} as CropAmounts);
     }
 
+    isCropUnlocked(cropId: CropId): boolean {
+        return this.unlockedCrops.includes(cropId);
+    }
+
+    unlockCrop(cropId: CropId) {
+        if (!this.unlockedCrops.includes(cropId)) {
+            this.unlockedCrops.push(cropId);
+        }
+    }
+
     addClick(cropType: CropId, reward?: number) {
         const finalReward = reward ?? 1;
 
         this.totalClicks++;
         this.setCropAmount(cropType, this.getCropAmount(cropType) + finalReward);
 
-        this.emit('scoreChanged', this.getCropAmounts());
-        this.emit('statsChanged', this.totalClicks);
+        this.emit("scoreChanged", this.getCropAmounts());
+        this.emit("statsChanged", this.totalClicks);
     }
 
     public buyUpgrade(upgradeId: string): boolean {
@@ -73,13 +84,12 @@ export class GameState extends Phaser.Events.EventEmitter {
 
         if (!upgrade) return false;
         if (this.purchasedUpgrades.includes(upgradeId)) return false;
-        
-        if (this.carrots < upgrade.cost) return false;
 
         const hasRequirements = upgrade.requires.every(req => this.purchasedUpgrades.includes(req));
         if (!hasRequirements) return false;
+        if (this.getCropAmount(upgrade.costCrop) < upgrade.cost) return false;
 
-        this.carrots -= upgrade.cost;
+        this.setCropAmount(upgrade.costCrop, this.getCropAmount(upgrade.costCrop) - upgrade.cost);
         this.purchasedUpgrades.push(upgradeId);
 
         this.applyUpgradeEffect(upgrade);
@@ -89,22 +99,20 @@ export class GameState extends Phaser.Events.EventEmitter {
         return true;
     }
 
-    public getGlobalSpeedReduction(): number {
+    public getGrowthSpeedReduction(cropType: CropId): number {
         let totalReduction = 0;
         for (const id of this.purchasedUpgrades) {
-            const up = UPGRADES[id];
-            if (up.type === 'speed') {
-                totalReduction += up.value as number;
+            const upgrade = UPGRADES[id];
+            if (upgrade?.type === "speed" && upgrade.targetCrop === cropType) {
+                totalReduction += upgrade.value as number;
             }
         }
         return totalReduction;
     }
 
     private applyUpgradeEffect(upgrade: UpgradeDef) {
-        if (upgrade.type === 'crop') {
-            // todo: Lógica para adicionar o crop na lista de disponíveis do jogador
-        } else if (upgrade.type === 'tile') {
-            // todo: Lógica para desbloquear o tile no TileGrid
+        if (upgrade.type === "crop") {
+            this.unlockCrop(upgrade.value as CropId);
         }
     }
 }

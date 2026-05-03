@@ -13,7 +13,7 @@ type GrowableCropDef = {
     kind: "growable";
     label: string;
     icon: string;
-    amountKey: string;
+    amountKeys: string[];
     preload: CropPreloadDef;
     idleFrame: number;
     growthFrames: {
@@ -29,7 +29,7 @@ type GrassCropDef = {
     kind: "grass";
     label: string;
     icon: string;
-    amountKey: string;
+    amountKeys: string[];
     preload: CropPreloadDef;
     scale: number;
     y: number;
@@ -51,7 +51,7 @@ export const CROP_DEFS = {
         kind: "grass",
         label: "Grass",
         icon: "\u{1F331}",
-        amountKey: "grass",
+        amountKeys: ["grass"],
         preload: {
             key: "grass-item",
             path: "grass.png",
@@ -75,7 +75,7 @@ export const CROP_DEFS = {
         kind: "growable",
         label: "Wheat",
         icon: "\u{1F33E}",
-        amountKey: "wheat",
+        amountKeys: ["wheat", "wheat"],
         preload: {
             key: "wheat-sheet",
             path: "wheat.png",
@@ -95,7 +95,7 @@ export const CROP_DEFS = {
         kind: "growable",
         label: "Carrot",
         icon: "\u{1F955}",
-        amountKey: "carrots",
+        amountKeys: ["carrots", "carrot"],
         preload: {
             key: "carrot-sheet",
             path: "carrot.png",
@@ -114,7 +114,8 @@ export const CROP_DEFS = {
 } as const satisfies Record<string, CropDef>;
 
 export const CROP_IDS = Object.keys(CROP_DEFS) as CropId[];
-export const DEFAULT_CROP_ID: CropId = "carrot";
+export const DEFAULT_CROP_ID: CropId = "grass";
+export const STARTING_CROP_IDS: CropId[] = ["grass"];
 
 export function getCropDef(cropId: CropId): CropDef {
     return CROP_DEFS[cropId];

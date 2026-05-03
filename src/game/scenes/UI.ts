@@ -1,4 +1,5 @@
 import { UPGRADES } from '../systems/UpgradeDefs';
+import { getCropDef } from '../systems/CropDefs';
 import { GameState } from "../systems/GameState";
 
 export class ShopUI {
@@ -37,7 +38,8 @@ export class ShopUI {
         Object.values(UPGRADES).forEach(upgrade => {
             const isPurchased = GameState.instance.purchasedUpgrades.includes(upgrade.id);
             const hasRequirements = upgrade.requires.every(req => GameState.instance.purchasedUpgrades.includes(req));
-            const canAfford = GameState.instance.carrots >= upgrade.cost;
+            const canAfford = GameState.instance.getCropAmount(upgrade.costCrop) >= upgrade.cost;
+            const costCrop = getCropDef(upgrade.costCrop);
 
             let statusClass = 'available';
             if (isPurchased) statusClass = 'purchased';
@@ -56,7 +58,7 @@ export class ShopUI {
         `<button 
                         ${(!hasRequirements || !canAfford) ? 'disabled' : ''} 
                         id="btn-${upgrade.id}">
-                        Buy (${upgrade.cost})
+                        Buy (${upgrade.cost} ${costCrop.icon})
                     </button>` 
         : '<span style="margin-left:auto; color: #4caf50; font-weight: bold;">Purchased ✓</span>'
 }
