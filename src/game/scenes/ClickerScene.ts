@@ -16,7 +16,6 @@ export class ClickerScene extends Phaser.Scene {
     private buttonBg!: Phaser.GameObjects.Rectangle;
     private buttonText!: Phaser.GameObjects.Text;
     private counterBg!: Phaser.GameObjects.Graphics;
-    private lastGrassFrame: number = -1;
     private trunkHealth: number = 10;
 
     private selectedCrop: CropId = DEFAULT_CROP_ID;
@@ -285,7 +284,7 @@ export class ClickerScene extends Phaser.Scene {
             return;
         }
 
-        const isTrunk = Number(this.cropSprite.frame.name) === crop.trunkFrame;
+        const isTrunk = crop.trunkFrames.some(trunkFrame => Number(this.cropSprite.frame.name) === trunkFrame);
         this.buttonText.setText(isTrunk ? "Break" : "Cut");
     }
 
@@ -293,20 +292,14 @@ export class ClickerScene extends Phaser.Scene {
         const crop = getCropDef("grass");
         if (crop.kind !== "grass") return 0;
 
-        let nextFrame: number;
-        do {
-            const rand = Math.random();
-            let threshold = 0;
-            const rareFrame = crop.rareFrames.find(frameDef => {
-                threshold += frameDef.chance;
-                return rand < threshold;
-            });
+        const rand = Math.random();
+        let threshold = 0;
+        const rareFrame = crop.rareFrames.find(frameDef => {
+            threshold += frameDef.chance;
+            return rand < threshold;
+        });
 
-            nextFrame = rareFrame?.frame ?? crop.commonFrames[Math.floor(Math.random() * crop.commonFrames.length)];
-        } while (nextFrame === this.lastGrassFrame);
-
-        this.lastGrassFrame = nextFrame;
-        return nextFrame;
+        return rareFrame?.frame ?? crop.commonFrames[Math.floor(Math.random() * crop.commonFrames.length)];
     }
 
     private createPlantButton(x: number, y: number) {
@@ -342,7 +335,7 @@ export class ClickerScene extends Phaser.Scene {
         const crop = getCropDef(this.selectedCrop);
         if (crop.kind !== "grass") return "Plant";
 
-        const isTrunk = Number(this.cropSprite.frame.name) === crop.trunkFrame;
+        const isTrunk = crop.trunkFrames.some(trunkFrame => Number(this.cropSprite.frame.name) === trunkFrame);
         return isTrunk ? "Break" : "Cut";
     }
 
@@ -416,6 +409,36 @@ export class ClickerScene extends Phaser.Scene {
             duration: 50,
             yoyo: true
         });
+
+        const crop = getCropDef(this.selectedCrop);
+        const originalScale = crop.scale;
+
+        this.tweens.add({
+            targets: this.cropSprite,
+            scaleX: originalScale * 0.88,
+            scaleY: originalScale * 0.88,
+            duration: 60,
+            ease: "Power2",
+            yoyo: false,
+            onComplete: () => {
+                this.tweens.add({
+                    targets: this.cropSprite,
+                    scaleX: originalScale * 1.08,
+                    scaleY: originalScale * 1.08,
+                    duration: 80,
+                    ease: "Back.easeOut",
+                    onComplete: () => {
+                        this.tweens.add({
+                            targets: this.cropSprite,
+                            scaleX: originalScale,
+                            scaleY: originalScale,
+                            duration: 60,
+                            ease: "Power1"
+                        });
+                    }
+                });
+            }
+        });
     }
 
     private handleHarvest() {
@@ -425,7 +448,7 @@ export class ClickerScene extends Phaser.Scene {
         if (crop.kind === "grass") {
             const currentFrame = Number(this.cropSprite.frame.name);
 
-            if (currentFrame === crop.trunkFrame) {
+            if (crop.trunkFrames.some(trunkFrame => currentFrame === trunkFrame)) {
                 this.trunkHealth--;
 
                 if (this.trunkHealth > 0) {
@@ -436,15 +459,18 @@ export class ClickerScene extends Phaser.Scene {
 
                 GameState.instance.addClick(this.selectedCrop, crop.trunkReward);
                 this.trunkHealth = crop.trunkHealth;
+                this.spawnFloatingText(crop.trunkReward);
             } else {
                 const reward = crop.rareFrames.find(frameDef => frameDef.frame === currentFrame)?.reward ?? 1;
                 GameState.instance.addClick(this.selectedCrop, reward);
+                this.spawnFloatingText(reward);
             }
 
             this.cropSprite.setFrame(this.getNextGrassFrame());
         } else {
             GameState.instance.addClick(this.selectedCrop);
             this.cropSprite.play(`${this.selectedCrop}-idle`);
+            this.spawnFloatingText(1);
         }
 
         this.updateButtonText();
@@ -477,6 +503,33 @@ export class ClickerScene extends Phaser.Scene {
 
         shopBtn.on("pointerdown", () => {
             shop.open();
+        });
+    }
+
+    private spawnFloatingText(amount: number) {
+        const x = this.cameras.main.width / 2 + Phaser.Math.Between(-30, 30);
+        const y = this.cameras.main.height / 2 - 60;
+
+        const crop = getCropDef(this.selectedCrop);
+        const floatText = this.add.text(x, y, `+${amount} ${crop.icon}`, {
+            fontSize: "28px",
+            fontFamily: "'Inter', Arial, sans-serif",
+            color: "#ffffff",
+            fontStyle: "900",
+            stroke: "#33691e",
+            strokeThickness: 4,
+            shadow: { offsetX: 0, offsetY: 2, color: "#000000", blur: 3, fill: true }
+        }).setOrigin(0.5).setDepth(10);
+
+        this.tweens.add({
+            targets: floatText,
+            y: y - 80,
+            alpha: 0,
+            scaleX: 0.6,
+            scaleY: 0.6,
+            duration: 900,
+            ease: "Power2",
+            onComplete: () => floatText.destroy()
         });
     }
 }

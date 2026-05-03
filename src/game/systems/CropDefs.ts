@@ -39,7 +39,7 @@ type GrassCropDef = {
         chance: number;
         reward: number;
     }>;
-    trunkFrame: number;
+    trunkFrames: number[];
     trunkHealth: number;
     trunkReward: number;
 };
@@ -59,7 +59,7 @@ export const CROP_DEFS = {
             frameHeight: 160
         },
         scale: 1.0,
-        y: 50,
+        y: 75,
         commonFrames: [0],
         rareFrames: [
             { frame: 2, chance: 0.04, reward: 5 },
@@ -67,7 +67,7 @@ export const CROP_DEFS = {
             { frame: 4, chance: 0.02, reward: 20 },
             { frame: 5, chance: 0.01, reward: 25 }
         ],
-        trunkFrame: 5,
+        trunkFrames: [4, 5],
         trunkHealth: 10,
         trunkReward: 25
     },
