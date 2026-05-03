@@ -62,12 +62,12 @@ export const CROP_DEFS = {
         y: 75,
         commonFrames: [0],
         rareFrames: [
-            { frame: 2, chance: 0.04, reward: 5 },
-            { frame: 3, chance: 0.04, reward: 10 },
-            { frame: 4, chance: 0.02, reward: 20 },
-            { frame: 5, chance: 0.01, reward: 25 }
+            { frame: 1, chance: 0.04, reward: 5 },
+            { frame: 2, chance: 0.04, reward: 10 },
+            { frame: 3, chance: 0.02, reward: 20 },
+            { frame: 4, chance: 0.01, reward: 25 }
         ],
-        trunkFrames: [4, 5],
+        trunkFrames: [3, 4],
         trunkHealth: 10,
         trunkReward: 25
     },

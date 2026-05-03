@@ -50,6 +50,18 @@ export const UPGRADES: Record<string, UpgradeDef> = {
         targetCrop: "wheat",
         icon: "\u{1F4A7}"
     },
+    speed_2_wheat: {
+        id: "speed_2_wheat",
+        name: "Wheat grows even faster",
+        description: "Reduces the growth time of wheat by 200ms.",
+        cost: 1000,
+        costCrop: "wheat",
+        requires: ["speed_wheat"],
+        type: "speed",
+        value: 200,
+        targetCrop: "wheat",
+        icon: "\u{2728}"
+    },
     speed_carrot: {
         id: "speed_carrot",
         name: "Carrot grows faster",
@@ -61,5 +73,17 @@ export const UPGRADES: Record<string, UpgradeDef> = {
         value: 200,
         targetCrop: "carrot",
         icon: "\u{1F4A7}"
-    }
+    },
+    speed_2_carrot: {
+        id: "speed_2_carrot",
+        name: "Carrot grows even faster",
+        description: "Reduces the growth time of carrot by 200ms.",
+        cost: 1000,
+        costCrop: "carrot",
+        requires: ["speed_carrot"],
+        type: "speed",
+        value: 200,
+        targetCrop: "carrot",
+        icon: "\u{2728}"
+    },
 };
