@@ -8,7 +8,6 @@ export class ClickerScene extends Phaser.Scene {
     private counterText!: Phaser.GameObjects.Text;
     private cropSprite!: Phaser.GameObjects.Sprite;
     private progressBar!: Phaser.GameObjects.Graphics;
-    private isBusy: boolean = false;
     private bg!: Phaser.GameObjects.TileSprite;
     private farmContainer!: Phaser.GameObjects.Container;
     private dirtPatch!: Phaser.GameObjects.TileSprite;
@@ -16,18 +15,21 @@ export class ClickerScene extends Phaser.Scene {
     private buttonBg!: Phaser.GameObjects.Rectangle;
     private buttonText!: Phaser.GameObjects.Text;
     private counterBg!: Phaser.GameObjects.Graphics;
-    private trunkHealth: number = 10;
-
-    private selectedCrop: CropId = DEFAULT_CROP_ID;
-    private selectedCropIndex: number = Math.max(0, CROP_IDS.indexOf(DEFAULT_CROP_ID));
-    private readonly crops = CROP_IDS;
-
     private carouselBg!: Phaser.GameObjects.Rectangle;
     private carouselLabel!: Phaser.GameObjects.Text;
     private carouselIcon!: Phaser.GameObjects.Text;
     private btnPrev!: Phaser.GameObjects.Text;
     private btnNext!: Phaser.GameObjects.Text;
     private dotGraphics!: Phaser.GameObjects.Graphics;
+
+    private isBusy: boolean = false;
+    private trunkHealth: number = 10;
+    private cropFullyGrown: boolean = false;
+
+    private readonly crops = CROP_IDS;
+    private selectedCrop: CropId = DEFAULT_CROP_ID;
+    private selectedCropIndex: number = Math.max(0, CROP_IDS.indexOf(DEFAULT_CROP_ID));
+
 
     constructor() {
         super("clicker-scene");
@@ -381,24 +383,40 @@ export class ClickerScene extends Phaser.Scene {
             return;
         }
 
+        if (this.cropFullyGrown) {
+            this.cropFullyGrown = false;
+            this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
+            this.handleHarvest(true);
+            return;
+        }
+
+        if (this.isBusy) return;
         this.isBusy = true;
+
+        this.tweens.killTweensOf({ progress: 0 });
+        this.drawProgressBar(0);
+
         this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
+        this.spawnFloatingText(1, false);
+        GameState.instance.addClick(this.selectedCrop, 1);
 
         const currentDuration = Math.max(50, crop.growthDuration - GameState.instance.getGlobalSpeedReduction());
         const totalFrames = crop.growthFrames.end - crop.growthFrames.start + 1;
         const dynamicFrameRate = (totalFrames / currentDuration) * 1000;
 
-        this.cropSprite.play({
-            key: `${this.selectedCrop}-growing`,
-            frameRate: dynamicFrameRate
-        });
+        this.cropSprite.play({ key: `${this.selectedCrop}-growing`, frameRate: dynamicFrameRate });
 
+        const progressTarget = { progress: 0 };
         this.tweens.add({
-            targets: { progress: 0 },
+            targets: progressTarget,
             progress: 1,
             duration: currentDuration,
             onUpdate: (_, target) => this.drawProgressBar(target.progress),
-            onComplete: () => this.handleHarvest()
+            onComplete: () => {
+                this.cropFullyGrown = true;
+                this.isBusy = false;
+                this.drawProgressBar(1);
+            }
         });
     }
 
@@ -441,36 +459,38 @@ export class ClickerScene extends Phaser.Scene {
         });
     }
 
-    private handleHarvest() {
-        this.drawProgressBar(0);
-
+    private handleHarvest(bonus: boolean = false) {
         const crop = getCropDef(this.selectedCrop);
+
         if (crop.kind === "grass") {
+            this.drawProgressBar(0);
             const currentFrame = Number(this.cropSprite.frame.name);
 
             if (crop.trunkFrames.some(trunkFrame => currentFrame === trunkFrame)) {
                 this.trunkHealth--;
-
                 if (this.trunkHealth > 0) {
                     this.playClickFeedback(this.cropSprite);
                     this.isBusy = false;
                     return;
                 }
-
                 GameState.instance.addClick(this.selectedCrop, crop.trunkReward);
+                this.spawnFloatingText(crop.trunkReward, false);
                 this.trunkHealth = crop.trunkHealth;
-                this.spawnFloatingText(crop.trunkReward);
             } else {
-                const reward = crop.rareFrames.find(frameDef => frameDef.frame === currentFrame)?.reward ?? 1;
+                const reward = crop.rareFrames.find(f => f.frame === currentFrame)?.reward ?? 1;
                 GameState.instance.addClick(this.selectedCrop, reward);
-                this.spawnFloatingText(reward);
+                this.spawnFloatingText(reward, false);
             }
 
             this.cropSprite.setFrame(this.getNextGrassFrame());
         } else {
-            GameState.instance.addClick(this.selectedCrop);
-            this.cropSprite.play(`${this.selectedCrop}-idle`);
-            this.spawnFloatingText(1);
+            if (bonus) {
+                const bonusAmount = 25;
+                GameState.instance.addClick(this.selectedCrop, bonusAmount);
+                this.spawnFloatingText(bonusAmount, true);
+                this.drawProgressBar(0);
+                this.cropSprite.play(`${this.selectedCrop}-idle`);
+            }
         }
 
         this.updateButtonText();
@@ -506,29 +526,34 @@ export class ClickerScene extends Phaser.Scene {
         });
     }
 
-    private spawnFloatingText(amount: number) {
+    private spawnFloatingText(amount: number, golden: boolean = false) {
         const x = this.cameras.main.width / 2 + Phaser.Math.Between(-30, 30);
         const y = this.cameras.main.height / 2 - 60;
 
         const crop = getCropDef(this.selectedCrop);
-        const floatText = this.add.text(x, y, `+${amount} ${crop.icon}`, {
-            fontSize: "28px",
+
+        const label = golden
+            ? `✨ +${amount} ${crop.icon}`
+            : `+${amount} ${crop.icon}`;
+
+        const floatText = this.add.text(x, y, label, {
+            fontSize: golden ? "34px" : "28px",
             fontFamily: "'Inter', Arial, sans-serif",
-            color: "#ffffff",
+            color: golden ? "#FFD700" : "#ffffff",
             fontStyle: "900",
-            stroke: "#33691e",
-            strokeThickness: 4,
+            stroke: golden ? "#B8860B" : "#33691e",
+            strokeThickness: golden ? 5 : 4,
             shadow: { offsetX: 0, offsetY: 2, color: "#000000", blur: 3, fill: true }
         }).setOrigin(0.5).setDepth(10);
 
         this.tweens.add({
             targets: floatText,
-            y: y - 80,
+            y: y - (golden ? 110 : 80),
             alpha: 0,
-            scaleX: 0.6,
-            scaleY: 0.6,
-            duration: 900,
-            ease: "Power2",
+            scaleX: golden ? 1.1 : 0.6,
+            scaleY: golden ? 1.1 : 0.6,
+            duration: golden ? 1300 : 900,
+            ease: golden ? "Back.easeOut" : "Power2",
             onComplete: () => floatText.destroy()
         });
     }
