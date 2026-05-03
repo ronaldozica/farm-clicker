@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { CROP_IDS, DEFAULT_CROP_ID, getCropDef, type CropAmounts, type CropId } from "../systems/CropDefs";
 import { GameState } from "../systems/GameState";
 import { SaveSystem } from "../systems/SaveSystem";
 import { ShopUI } from "./UI";
@@ -18,10 +19,9 @@ export class ClickerScene extends Phaser.Scene {
     private lastGrassFrame: number = -1;
     private trunkHealth: number = 10;
 
-    private selectedCrop: 'grass' | 'wheat' | 'carrot' = 'carrot';
-
-    private selectedCropIndex: number = 2; // 0=grass, 1=wheat, 2=carrot
-    private readonly crops: Array<'grass' | 'wheat' | 'carrot'> = ['grass', 'wheat', 'carrot'];
+    private selectedCrop: CropId = DEFAULT_CROP_ID;
+    private selectedCropIndex: number = Math.max(0, CROP_IDS.indexOf(DEFAULT_CROP_ID));
+    private readonly crops = CROP_IDS;
 
     private carouselBg!: Phaser.GameObjects.Rectangle;
     private carouselLabel!: Phaser.GameObjects.Text;
@@ -38,19 +38,12 @@ export class ClickerScene extends Phaser.Scene {
         this.load.image("grass-bg", "grass-bg.png");
         this.load.image("dirt", "dirt-bg.png");
 
-        this.load.spritesheet("grass-item", "grass.png", {
-            frameWidth: 100,
-            frameHeight: 100
-        });
-
-        this.load.spritesheet("carrot-sheet", "carrot.png", {
-            frameWidth: 320,
-            frameHeight: 640
-        });
-
-        this.load.spritesheet("wheat-sheet", "wheat.png", {
-            frameWidth: 110,
-            frameHeight: 180
+        this.crops.forEach(cropId => {
+            const crop = getCropDef(cropId);
+            this.load.spritesheet(crop.preload.key, crop.preload.path, {
+                frameWidth: crop.preload.frameWidth,
+                frameHeight: crop.preload.frameHeight
+            });
         });
     }
 
@@ -63,35 +56,35 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private setupEventListeners() {
-        GameState.instance.on("scoreChanged", (crops: { grass: number; wheat: number; carrots: number }) => {
-            this.counterText.setText(`🌱: ${crops.grass} | 🌾: ${crops.wheat} | 🥕: ${crops.carrots}`);
+        GameState.instance.on("scoreChanged", (crops: CropAmounts) => {
+            this.counterText.setText(this.formatScoreText(crops));
             this.updateCounterBackground();
             SaveSystem.save();
         });
     }
 
     private createAnimations() {
-        this.anims.create({
-            key: "carrot-idle",
-            frames: [{ key: "carrot-sheet", frame: 2 }],
-            frameRate: 1, repeat: -1
-        });
-        this.anims.create({
-            key: "carrot-growing",
-            frames: this.anims.generateFrameNumbers("carrot-sheet", { start: 3, end: 7 }),
-            frameRate: 5, repeat: 0
-        });
+        this.crops.forEach(cropId => {
+            const crop = getCropDef(cropId);
+            if (crop.kind !== "growable") return;
 
-        this.anims.create({
-            key: "wheat-idle",
-            frames: [{ key: "wheat-sheet", frame: 0 }],
-            frameRate: 1, repeat: -1
+            this.anims.create({
+                key: `${cropId}-idle`,
+                frames: [{ key: crop.preload.key, frame: crop.idleFrame }],
+                frameRate: 1, repeat: -1
+            });
+            this.anims.create({
+                key: `${cropId}-growing`,
+                frames: this.anims.generateFrameNumbers(crop.preload.key, crop.growthFrames),
+                frameRate: 5, repeat: 0
+            });
         });
-        this.anims.create({
-            key: "wheat-growing",
-            frames: this.anims.generateFrameNumbers("wheat-sheet", { start: 0, end: 4 }),
-            frameRate: 5, repeat: 0
-        });
+    }
+
+    private formatScoreText(crops: CropAmounts) {
+        return this.crops
+            .map(cropId => `${getCropDef(cropId).icon}: ${crops[cropId] ?? 0}`)
+            .join(" | ");
     }
 
     private initializeUI() {
@@ -116,7 +109,7 @@ export class ClickerScene extends Phaser.Scene {
         const fullW = this.cameras.main.width;
         const fullH = this.cameras.main.height;
 
-        this.bg = this.add.tileSprite(0, 0, fullW, fullH, 'grass-bg').setOrigin(0).setScrollFactor(0);
+        this.bg = this.add.tileSprite(0, 0, fullW, fullH, "grass-bg").setOrigin(0).setScrollFactor(0);
         this.bg.setDepth(0);
         this.updateBackgroundScale(fullW);
     }
@@ -128,7 +121,7 @@ export class ClickerScene extends Phaser.Scene {
 
     private createScoreUI(centerX: number, counterY: number) {
         this.counterBg = this.add.graphics();
-        this.counterText = this.add.text(centerX, counterY, `🌱: ${GameState.instance.grass} | 🌾: ${GameState.instance.wheat} | 🥕: ${GameState.instance.carrots}`, {
+        this.counterText = this.add.text(centerX, counterY, this.formatScoreText(GameState.instance.getCropAmounts()), {
             fontSize: "32px",
             fontFamily: "'Inter', 'Nunito', sans-serif",
             color: "#4e342e",
@@ -159,12 +152,13 @@ export class ClickerScene extends Phaser.Scene {
 
     private createFarm(centerX: number) {
         const fullH = this.cameras.main.height;
-        const carrotOffset = 75;
-        const carrotY = fullH / 2 - carrotOffset;
+        const cropOffset = 75;
+        const cropY = fullH / 2 - cropOffset;
+        const crop = getCropDef(this.selectedCrop);
 
-        this.farmContainer = this.add.container(centerX, carrotY);
-
-        this.cropSprite = this.add.sprite(0, 0, "carrot-sheet").setScale(0.5).play("carrot-idle");
+        this.farmContainer = this.add.container(centerX, cropY);
+        this.cropSprite = this.add.sprite(0, crop.y, crop.preload.key).setScale(crop.scale);
+        this.applyCropSprite(this.selectedCrop);
 
         const baseSpriteW = 160;
         const baseSpriteH = 320;
@@ -174,11 +168,11 @@ export class ClickerScene extends Phaser.Scene {
         const dirtH = Math.round(baseSpriteH + padding * 2);
         const dirtOffset = 15;
         const newDirtH = Math.round(dirtH / 2);
-        const originalBottom = carrotY + dirtH / 2 - dirtOffset;
+        const originalBottom = cropY + dirtH / 2 - dirtOffset;
         const newCenterY = originalBottom - newDirtH / 2;
-        const dirtLocalY = newCenterY - carrotY;
+        const dirtLocalY = newCenterY - cropY;
 
-        this.dirtPatch = this.add.tileSprite(0, dirtLocalY, dirtW, newDirtH, 'dirt').setOrigin(0.5);
+        this.dirtPatch = this.add.tileSprite(0, dirtLocalY, dirtW, newDirtH, "dirt").setOrigin(0.5);
         this.dirtFrame = this.add.graphics();
         this.dirtFrame.lineStyle(4, 0x3e2723, 1);
         this.dirtFrame.strokeRoundedRect(-dirtW / 2, dirtLocalY - newDirtH / 2, dirtW, newDirtH, 8);
@@ -189,7 +183,7 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private createCropSelector(centerX: number, buttonY: number) {
-        const selectorY = buttonY - 150;
+        const selectorY = buttonY - 120;
         const cardW = 80;
         const cardH = 80;
         const arrowOffset = 60;
@@ -198,38 +192,38 @@ export class ClickerScene extends Phaser.Scene {
             .setStrokeStyle(3, 0x8d6e63)
             .setDepth(5);
 
-        this.carouselIcon = this.add.text(centerX, selectorY - 10, '', { fontSize: '32px' })
+        this.carouselIcon = this.add.text(centerX, selectorY - 10, "", { fontSize: "32px" })
             .setOrigin(0.5)
             .setDepth(6);
 
-        this.carouselLabel = this.add.text(centerX, selectorY + 22, '', {
-            fontSize: '13px',
+        this.carouselLabel = this.add.text(centerX, selectorY + 22, "", {
+            fontSize: "13px",
             fontFamily: "'Inter', sans-serif",
-            color: '#6d4c41',
-            fontStyle: 'bold'
+            color: "#6d4c41",
+            fontStyle: "bold"
         }).setOrigin(0.5).setDepth(6);
 
-        this.btnPrev = this.add.text(centerX - arrowOffset, selectorY, '‹', {
-            fontSize: '36px',
+        this.btnPrev = this.add.text(centerX - arrowOffset, selectorY, "\u2039", {
+            fontSize: "36px",
             fontFamily: "'Inter', sans-serif",
-            color: '#4e342e',
-            fontStyle: 'bold'
+            color: "#4e342e",
+            fontStyle: "bold"
         }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(6);
 
-        this.btnNext = this.add.text(centerX + arrowOffset, selectorY, '›', {
-            fontSize: '36px',
+        this.btnNext = this.add.text(centerX + arrowOffset, selectorY, "\u203A", {
+            fontSize: "36px",
             fontFamily: "'Inter', sans-serif",
-            color: '#4e342e',
-            fontStyle: 'bold'
+            color: "#4e342e",
+            fontStyle: "bold"
         }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(6);
 
         this.dotGraphics = this.add.graphics().setDepth(6);
 
-        this.btnPrev.on('pointerdown', () => {
+        this.btnPrev.on("pointerdown", () => {
             this.selectedCropIndex = (this.selectedCropIndex - 1 + this.crops.length) % this.crops.length;
             this.switchCrop(this.crops[this.selectedCropIndex]);
         });
-        this.btnNext.on('pointerdown', () => {
+        this.btnNext.on("pointerdown", () => {
             this.selectedCropIndex = (this.selectedCropIndex + 1) % this.crops.length;
             this.switchCrop(this.crops[this.selectedCropIndex]);
         });
@@ -238,13 +232,9 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private updateCarouselVisuals(centerX: number, selectorY: number) {
-        const icons = ['🌱', '🌾', '🥕'];
-        const labels = ['Grass', 'Wheat', 'Carrot'];
-
-        this.carouselIcon.setText(icons[this.selectedCropIndex]);
-        this.carouselLabel.setText(labels[this.selectedCropIndex]);
-
-        // this.carouselBg.setFillStyle(0xffeb3b);
+        const crop = getCropDef(this.selectedCrop);
+        this.carouselIcon.setText(crop.icon);
+        this.carouselLabel.setText(crop.label);
 
         this.dotGraphics.clear();
         const dotSpacing = 14;
@@ -259,58 +249,60 @@ export class ClickerScene extends Phaser.Scene {
         });
     }
 
-    private switchCrop(crop: 'grass' | 'wheat' | 'carrot') {
+    private switchCrop(crop: CropId) {
         if (this.isBusy || this.selectedCrop === crop) return;
         this.selectedCrop = crop;
-
-        if (crop === 'grass') {
-            this.cropSprite.anims.stop();
-            this.cropSprite.setTexture("grass-item");
-            this.cropSprite.setFrame(this.getNextGrassFrame());
-            this.cropSprite.setScale(1.2);
-            this.cropSprite.y = 50;
-            this.trunkHealth = 10;
-        } else {
-            this.cropSprite.play(`${crop}-idle`);
-
-            if (crop === 'carrot') {
-                this.cropSprite.setScale(0.5);
-                this.cropSprite.y = 0;
-            } else {
-                this.cropSprite.setScale(1);
-                this.cropSprite.y = 50;
-            }
-        }
+        this.applyCropSprite(crop);
 
         const centerX = this.cameras.main.width / 2;
         const buttonY = this.cameras.main.height - (this.cameras.main.height * 0.1);
 
-        this.updateCarouselVisuals(centerX, buttonY - 150);
+        this.updateCarouselVisuals(centerX, buttonY - 120);
         this.updateButtonText();
     }
 
-    private updateButtonText() {
-        if (this.selectedCrop !== 'grass') {
-            this.buttonText.setText("Plant");
-        } else {
-            const isTrunk = this.cropSprite.frame.name == "9";
-            this.buttonText.setText(isTrunk ? "Break" : "Cut");
+    private applyCropSprite(cropId: CropId) {
+        const crop = getCropDef(cropId);
+
+        this.cropSprite.setTexture(crop.preload.key);
+        this.cropSprite.setScale(crop.scale);
+        this.cropSprite.y = crop.y;
+
+        if (crop.kind === "grass") {
+            this.cropSprite.anims.stop();
+            this.cropSprite.setFrame(this.getNextGrassFrame());
+            this.trunkHealth = crop.trunkHealth;
+            return;
         }
+
+        this.cropSprite.play(`${cropId}-idle`);
+    }
+
+    private updateButtonText() {
+        const crop = getCropDef(this.selectedCrop);
+        if (crop.kind !== "grass") {
+            this.buttonText.setText("Plant");
+            return;
+        }
+
+        const isTrunk = Number(this.cropSprite.frame.name) === crop.trunkFrame;
+        this.buttonText.setText(isTrunk ? "Break" : "Cut");
     }
 
     private getNextGrassFrame(): number {
-        let nextFrame: number;
-        const commonFrames = [0, 1, 2, 3, 4, 5];
+        const crop = getCropDef("grass");
+        if (crop.kind !== "grass") return 0;
 
+        let nextFrame: number;
         do {
             const rand = Math.random();
-            if (rand < 0.05) nextFrame = 6;
-            else if (rand < 0.10) nextFrame = 7;
-            else if (rand < 0.15) nextFrame = 8;
-            else if (rand < 0.20) nextFrame = 9;
-            else {
-                nextFrame = commonFrames[Math.floor(Math.random() * commonFrames.length)];
-            }
+            let threshold = 0;
+            const rareFrame = crop.rareFrames.find(frameDef => {
+                threshold += frameDef.chance;
+                return rand < threshold;
+            });
+
+            nextFrame = rareFrame?.frame ?? crop.commonFrames[Math.floor(Math.random() * crop.commonFrames.length)];
         } while (nextFrame === this.lastGrassFrame);
 
         this.lastGrassFrame = nextFrame;
@@ -324,20 +316,14 @@ export class ClickerScene extends Phaser.Scene {
             .setStrokeStyle(4, 0x33691e)
             .setOrigin(0.5);
 
-        let text = "Plant";
-        if (this.selectedCrop === 'grass') {
-            const isTrunk = this.cropSprite.frame.name === "9";
-            text = isTrunk ? "Break" : "Cut";
-        }
-
-        this.buttonText = this.add.text(x, y, text, {
+        this.buttonText = this.add.text(x, y, this.getButtonText(), {
             fontSize: "28px",
             fontFamily: "'Inter', Arial, sans-serif",
             color: "#ffffff",
             fontStyle: "900",
             stroke: "#33691e",
             strokeThickness: 4,
-            shadow: { offsetX: 0, offsetY: 2, color: '#000', blur: 0, stroke: false, fill: true }
+            shadow: { offsetX: 0, offsetY: 2, color: "#000", blur: 0, stroke: false, fill: true }
         }).setOrigin(0.5);
 
         this.buttonBg.setInteractive({ useHandCursor: true })
@@ -352,8 +338,16 @@ export class ClickerScene extends Phaser.Scene {
             });
     }
 
+    private getButtonText() {
+        const crop = getCropDef(this.selectedCrop);
+        if (crop.kind !== "grass") return "Plant";
+
+        const isTrunk = Number(this.cropSprite.frame.name) === crop.trunkFrame;
+        return isTrunk ? "Break" : "Cut";
+    }
+
     private setupResizeHandler() {
-        this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+        this.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
             const w = gameSize.width || this.cameras.main.width;
             const h = gameSize.height || this.cameras.main.height;
             const centerX = w / 2;
@@ -387,7 +381,8 @@ export class ClickerScene extends Phaser.Scene {
     private handlePlantAction(bg: Phaser.GameObjects.Rectangle, text: Phaser.GameObjects.Text, shadow?: Phaser.GameObjects.Rectangle) {
         if (this.isBusy) return;
 
-        if (this.selectedCrop === 'grass') {
+        const crop = getCropDef(this.selectedCrop);
+        if (crop.kind === "grass") {
             this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
             this.handleHarvest();
             return;
@@ -396,11 +391,8 @@ export class ClickerScene extends Phaser.Scene {
         this.isBusy = true;
         this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
 
-        const baseDurations = { carrot: 1000, wheat: 500, grass: 0 };
-        const baseTime = baseDurations[this.selectedCrop];
-        const currentDuration = Math.max(50, baseTime - GameState.instance.getGlobalSpeedReduction());
-
-        const totalFrames = this.selectedCrop === 'carrot' ? 5 : 4;
+        const currentDuration = Math.max(50, crop.growthDuration - GameState.instance.getGlobalSpeedReduction());
+        const totalFrames = crop.growthFrames.end - crop.growthFrames.start + 1;
         const dynamicFrameRate = (totalFrames / currentDuration) * 1000;
 
         this.cropSprite.play({
@@ -417,10 +409,10 @@ export class ClickerScene extends Phaser.Scene {
         });
     }
 
-    private playClickFeedback(targets: any | any[]) {
+    private playClickFeedback(targets: Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[]) {
         this.tweens.add({
             targets: targets,
-            y: '+=4',
+            y: "+=4",
             duration: 50,
             yoyo: true
         });
@@ -429,10 +421,11 @@ export class ClickerScene extends Phaser.Scene {
     private handleHarvest() {
         this.drawProgressBar(0);
 
-        if (this.selectedCrop === 'grass') {
-            const currentFrame = parseInt(this.cropSprite.frame.name);
+        const crop = getCropDef(this.selectedCrop);
+        if (crop.kind === "grass") {
+            const currentFrame = Number(this.cropSprite.frame.name);
 
-            if (currentFrame === 9) {
+            if (currentFrame === crop.trunkFrame) {
                 this.trunkHealth--;
 
                 if (this.trunkHealth > 0) {
@@ -441,16 +434,11 @@ export class ClickerScene extends Phaser.Scene {
                     return;
                 }
 
-                GameState.instance.addClick('grass', 25);
-                this.trunkHealth = 10;
-            }
-            else {
-                let reward = 1;
-                if (currentFrame === 6) reward = 5;
-                else if (currentFrame === 7) reward = 10;
-                else if (currentFrame === 8) reward = 20;
-
-                GameState.instance.addClick('grass', reward);
+                GameState.instance.addClick(this.selectedCrop, crop.trunkReward);
+                this.trunkHealth = crop.trunkHealth;
+            } else {
+                const reward = crop.rareFrames.find(frameDef => frameDef.frame === currentFrame)?.reward ?? 1;
+                GameState.instance.addClick(this.selectedCrop, reward);
             }
 
             this.cropSprite.setFrame(this.getNextGrassFrame());
@@ -468,8 +456,8 @@ export class ClickerScene extends Phaser.Scene {
         const x = this.cameras.main.width / 2 - width / 2;
 
         const fullH = this.cameras.main.height;
-        const carrotOffset = 150;
-        const y = fullH / 2 + carrotOffset;
+        const cropOffset = 150;
+        const y = fullH / 2 + cropOffset;
 
         this.progressBar.clear();
         if (progress <= 0) return;
@@ -483,7 +471,7 @@ export class ClickerScene extends Phaser.Scene {
             .setStrokeStyle(4, 0x4e342e)
             .setInteractive({ useHandCursor: true });
 
-        this.add.text(centerX + 120, y, "🛒", { fontSize: "32px" }).setOrigin(0.5);
+        this.add.text(centerX + 120, y, "\u{1F6D2}", { fontSize: "32px" }).setOrigin(0.5);
 
         const shop = new ShopUI();
 

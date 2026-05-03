@@ -1,13 +1,11 @@
 import Phaser from "phaser";
+import { CROP_IDS, createEmptyCropAmounts, type CropId, type CropAmounts } from './CropDefs';
 import { UPGRADES, type UpgradeDef } from './UpgradeDefs';
 
 export class GameState extends Phaser.Events.EventEmitter {
     private static _instance: GameState;
     public purchasedUpgrades: string[] = [];
-    
-    public grass: number = 0; 
-    public wheat: number = 0; 
-    public carrots: number = 0;
+    public cropAmounts: CropAmounts = createEmptyCropAmounts();
     public totalClicks: number = 0;
 
     private constructor() {
@@ -21,20 +19,52 @@ export class GameState extends Phaser.Events.EventEmitter {
         return this._instance;
     }
 
-    addClick(cropType: 'grass' | 'wheat' | 'carrot', reward?: number) {
+    get grass(): number {
+        return this.getCropAmount('grass');
+    }
+
+    set grass(amount: number) {
+        this.setCropAmount('grass', amount);
+    }
+
+    get wheat(): number {
+        return this.getCropAmount('wheat');
+    }
+
+    set wheat(amount: number) {
+        this.setCropAmount('wheat', amount);
+    }
+
+    get carrots(): number {
+        return this.getCropAmount('carrot');
+    }
+
+    set carrots(amount: number) {
+        this.setCropAmount('carrot', amount);
+    }
+
+    getCropAmount(cropType: CropId): number {
+        return this.cropAmounts[cropType] ?? 0;
+    }
+
+    setCropAmount(cropType: CropId, amount: number) {
+        this.cropAmounts[cropType] = amount;
+    }
+
+    getCropAmounts(): CropAmounts {
+        return CROP_IDS.reduce((amounts, cropId) => {
+            amounts[cropId] = this.getCropAmount(cropId);
+            return amounts;
+        }, {} as CropAmounts);
+    }
+
+    addClick(cropType: CropId, reward?: number) {
         const finalReward = reward ?? 1;
 
         this.totalClicks++;
-        
-        if (cropType === 'carrot') {
-            this.carrots += finalReward;
-        } else if (cropType === 'wheat') {
-            this.wheat += finalReward;
-        } else if (cropType === 'grass') {
-            this.grass += finalReward;
-        }
+        this.setCropAmount(cropType, this.getCropAmount(cropType) + finalReward);
 
-        this.emit('scoreChanged', { grass: this.grass, wheat: this.wheat, carrots: this.carrots });
+        this.emit('scoreChanged', this.getCropAmounts());
         this.emit('statsChanged', this.totalClicks);
     }
 
@@ -54,7 +84,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 
         this.applyUpgradeEffect(upgrade);
 
-        this.emit("scoreChanged", { wheat: this.wheat, carrots: this.carrots });
+        this.emit("scoreChanged", this.getCropAmounts());
         this.emit("upgradesChanged");
         return true;
     }
