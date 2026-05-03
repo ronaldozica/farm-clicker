@@ -25,6 +25,7 @@ export class ClickerScene extends Phaser.Scene {
     private isBusy: boolean = false;
     private trunkHealth: number = 10;
     private cropFullyGrown: boolean = false;
+    private growthTween?: Phaser.Tweens.Tween;
 
     private readonly crops = CROP_IDS;
     private selectedCrop: CropId = DEFAULT_CROP_ID;
@@ -253,6 +254,7 @@ export class ClickerScene extends Phaser.Scene {
     private switchCrop(crop: CropId) {
         if (this.isBusy || this.selectedCrop === crop) return;
         this.selectedCrop = crop;
+        this.clearGrowthState();
         this.applyCropSprite(crop);
 
         const centerX = this.cameras.main.width / 2;
@@ -260,6 +262,14 @@ export class ClickerScene extends Phaser.Scene {
 
         this.updateCarouselVisuals(centerX, buttonY - 120);
         this.updateButtonText();
+    }
+
+    private clearGrowthState() {
+        this.growthTween?.stop();
+        this.growthTween = undefined;
+        this.isBusy = false;
+        this.cropFullyGrown = false;
+        this.drawProgressBar(0);
     }
 
     private applyCropSprite(cropId: CropId) {
@@ -374,8 +384,6 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private handlePlantAction(bg: Phaser.GameObjects.Rectangle, text: Phaser.GameObjects.Text, shadow?: Phaser.GameObjects.Rectangle) {
-        if (this.isBusy) return;
-
         const crop = getCropDef(this.selectedCrop);
         if (crop.kind === "grass") {
             this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
@@ -383,22 +391,31 @@ export class ClickerScene extends Phaser.Scene {
             return;
         }
 
+        this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
+
         if (this.cropFullyGrown) {
             this.cropFullyGrown = false;
-            this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
             this.handleHarvest(true);
             return;
         }
 
-        if (this.isBusy) return;
+        if (this.isBusy) {
+            GameState.instance.addClick(this.selectedCrop, 1);
+            this.spawnFloatingText(1, false);
+        }
+
+        this.startGrowthTimer();
+    }
+
+    private startGrowthTimer() {
+        const crop = getCropDef(this.selectedCrop);
+        if (crop.kind !== "growable") return;
+
+        this.growthTween?.stop();
+        this.growthTween = undefined;
         this.isBusy = true;
-
-        this.tweens.killTweensOf({ progress: 0 });
+        this.cropFullyGrown = false;
         this.drawProgressBar(0);
-
-        this.playClickFeedback(shadow ? [bg, text, shadow] : [bg, text]);
-        this.spawnFloatingText(1, false);
-        GameState.instance.addClick(this.selectedCrop, 1);
 
         const currentDuration = Math.max(50, crop.growthDuration - GameState.instance.getGlobalSpeedReduction());
         const totalFrames = crop.growthFrames.end - crop.growthFrames.start + 1;
@@ -407,12 +424,13 @@ export class ClickerScene extends Phaser.Scene {
         this.cropSprite.play({ key: `${this.selectedCrop}-growing`, frameRate: dynamicFrameRate });
 
         const progressTarget = { progress: 0 };
-        this.tweens.add({
+        this.growthTween = this.tweens.add({
             targets: progressTarget,
             progress: 1,
             duration: currentDuration,
             onUpdate: (_, target) => this.drawProgressBar(target.progress),
             onComplete: () => {
+                this.growthTween = undefined;
                 this.cropFullyGrown = true;
                 this.isBusy = false;
                 this.drawProgressBar(1);
