@@ -55,19 +55,19 @@ export const CROP_DEFS = {
         preload: {
             key: "grass-item",
             path: "grass.png",
-            frameWidth: 100,
-            frameHeight: 100
+            frameWidth: 200,
+            frameHeight: 160
         },
-        scale: 1.2,
+        scale: 1.0,
         y: 50,
-        commonFrames: [0, 1, 2, 3, 4, 5],
+        commonFrames: [0],
         rareFrames: [
-            { frame: 6, chance: 0.05, reward: 5 },
-            { frame: 7, chance: 0.05, reward: 10 },
-            { frame: 8, chance: 0.05, reward: 20 },
-            { frame: 9, chance: 0.05, reward: 25 }
+            { frame: 2, chance: 0.04, reward: 5 },
+            { frame: 3, chance: 0.04, reward: 10 },
+            { frame: 4, chance: 0.02, reward: 20 },
+            { frame: 5, chance: 0.01, reward: 25 }
         ],
-        trunkFrame: 9,
+        trunkFrame: 5,
         trunkHealth: 10,
         trunkReward: 25
     },
