@@ -31,6 +31,7 @@ export class ClickerScene extends Phaser.Scene {
     private availableCrops: CropId[] = [...CROP_IDS];
     private selectedCrop: CropId = DEFAULT_CROP_ID;
     private selectedCropIndex: number = Math.max(0, CROP_IDS.indexOf(DEFAULT_CROP_ID));
+    private readonly smallScreenMaxWidth = 520;
 
     constructor() {
         super("clicker-scene");
@@ -59,8 +60,7 @@ export class ClickerScene extends Phaser.Scene {
 
     private setupEventListeners() {
         GameState.instance.on("scoreChanged", (crops: CropAmounts) => {
-            this.counterText.setText(this.formatScoreText(crops));
-            this.updateCounterBackground();
+            this.updateScoreText(crops);
             SaveSystem.save();
         });
 
@@ -89,9 +89,26 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private formatScoreText(crops: CropAmounts) {
+        if (this.isSmallScreen()) {
+            return this.formatCropAmount(this.selectedCrop, crops);
+        }
+
         return this.availableCrops
-            .map(cropId => `${getCropDef(cropId).icon}: ${crops[cropId] ?? 0}`)
+            .map(cropId => this.formatCropAmount(cropId, crops))
             .join(" | ");
+    }
+
+    private formatCropAmount(cropId: CropId, crops: CropAmounts) {
+        return `${getCropDef(cropId).icon}: ${crops[cropId] ?? 0}`;
+    }
+
+    private isSmallScreen() {
+        return this.cameras.main.width <= this.smallScreenMaxWidth;
+    }
+
+    private updateScoreText(crops: CropAmounts = GameState.instance.getCropAmounts()) {
+        this.counterText.setText(this.formatScoreText(crops));
+        this.updateCounterBackground();
     }
 
     private initializeUI() {
@@ -268,6 +285,7 @@ export class ClickerScene extends Phaser.Scene {
 
         this.updateCarouselVisuals(centerX, buttonY - 120);
         this.updateButtonText();
+        this.updateScoreText();
     }
 
     private refreshAvailableCrops() {
@@ -285,8 +303,7 @@ export class ClickerScene extends Phaser.Scene {
         if (this.carouselBg) {
             const centerX = this.cameras.main.width / 2;
             const buttonY = this.cameras.main.height - (this.cameras.main.height * 0.1);
-            this.counterText.setText(this.formatScoreText(GameState.instance.getCropAmounts()));
-            this.updateCounterBackground();
+            this.updateScoreText();
             this.updateCarouselVisuals(centerX, buttonY - 120);
             this.updateButtonText();
         }
@@ -392,7 +409,7 @@ export class ClickerScene extends Phaser.Scene {
 
             this.counterText.x = centerX;
             this.counterText.y = 48;
-            this.updateCounterBackground();
+            this.updateScoreText();
 
             if (this.buttonBg && this.buttonText) {
                 this.buttonBg.x = centerX;
