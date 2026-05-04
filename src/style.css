@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap');
+
 html,
 body {
   width: 100%;
@@ -35,39 +37,13 @@ canvas {
   align-items: center;
 }
 
-#upgrade-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  z-index: 9999;
-  display: none;
-
-  background: #fff8e1;
-  border: 4px solid #8d6e63;
-  border-radius: 16px;
-  padding: 24px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
-  font-family: 'Inter', sans-serif;
-}
-
-#upgrade-modal.open {
-  display: block;
-  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
 #modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
   z-index: 9998;
   display: none;
 }
@@ -76,52 +52,312 @@ canvas {
   display: block;
 }
 
-.upgrade-node {
-  background: #f5f5f5;
-  border: 2px solid #ccc;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 12px;
+#upgrade-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+
+  background: linear-gradient(160deg, #fdf6e3 0%, #f5e6c0 100%);
+  border: 4px solid #8b5e3c;
+  border-radius: 20px;
+  padding: 0;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow: hidden;
+
+  font-family: 'Nunito', sans-serif;
+  box-shadow:
+    0 8px 0 #6b4226,
+    0 14px 50px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+#upgrade-modal.open {
+  display: flex;
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #8b5e3c 0%, #6b4226 100%);
+  padding: 14px 20px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  transition: 0.2s;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 3px solid #5a3218;
+  border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.55rem;
+  color: #fff8e1;
+  margin: 0;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+.resource-chip {
+  background: linear-gradient(135deg, #f9c74f 0%, #f4a31a 100%);
+  border: 2px solid #c8870a;
+  border-radius: 10px;
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 0 #a06600;
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.85rem;
+  color: #3d1f00;
+  white-space: nowrap;
+}
+
+#close-shop {
+  background: #c0392b;
+  border: 3px solid #922b21;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 0 #7b241c;
+  transition: transform 0.1s, box-shadow 0.1s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+#close-shop:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #7b241c;
+}
+
+#close-shop:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+#upgrade-tree {
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#upgrade-tree::-webkit-scrollbar {
+  width: 8px;
+}
+
+#upgrade-tree::-webkit-scrollbar-track {
+  background: #e8d5a3;
+  border-radius: 4px;
+}
+
+#upgrade-tree::-webkit-scrollbar-thumb {
+  background: #8b5e3c;
+  border-radius: 4px;
+}
+
+.upgrade-section {
+  background: rgba(255, 255, 255, 0.38);
+  border: 2px solid #c8a96e;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px dashed #c8a96e;
+}
+
+.section-icon {
+  font-size: 1.2rem;
+}
+
+.section-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1rem;
+  color: #5a3218;
+  margin: 0;
+  letter-spacing: 0.4px;
+}
+
+.section-count {
+  margin-left: auto;
+  background: #8b5e3c;
+  color: #fff8e1;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 20px;
+}
+
+.upgrade-node {
+  background: #fffdf5;
+  border: 2px solid #d4b483;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 3px 0 #c8a96e;
+  position: relative;
+  overflow: hidden;
+}
+
+.upgrade-node:last-child {
+  margin-bottom: 0;
+}
+
+.upgrade-node::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  pointer-events: none;
+}
+
+.upgrade-node:not(.locked):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #c8a96e;
 }
 
 .upgrade-node.purchased {
-  background: #e8f5e9;
-  border-color: #4caf50;
+  background: #edfbf0;
+  border-color: #52b069;
+  box-shadow: 0 3px 0 #3d9152;
+}
+
+.upgrade-node.purchased::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: #52b069;
+  border-radius: 2px 0 0 2px;
 }
 
 .upgrade-node.locked {
-  opacity: 0.5;
-  filter: grayscale(100%);
+  opacity: 0.55;
+  filter: grayscale(55%);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.upgrade-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.upgrade-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.upgrade-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.95rem;
+  color: #3d2008;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.upgrade-desc {
+  font-size: 0.72rem;
+  color: #7a5c3e;
+  display: block;
+  line-height: 1.3;
 }
 
 .upgrade-node button {
-  margin-left: auto;
-  padding: 8px 16px;
-  background: #689f38;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #6abf50 0%, #4a9e35 100%);
+  border: 2px solid #3a7d28;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.78rem;
+  padding: 6px 12px;
   cursor: pointer;
-  font-weight: bold;
+  box-shadow: 0 3px 0 #2d6320;
+  transition: transform 0.1s, box-shadow 0.1s;
+  white-space: nowrap;
+}
+
+.upgrade-node button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #2d6320;
+}
+
+.upgrade-node button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: none;
 }
 
 .upgrade-node button:disabled {
-  background: #9e9e9e;
+  background: linear-gradient(135deg, #b0b0b0 0%, #909090 100%);
+  border-color: #757575;
+  box-shadow: 0 2px 0 #616161;
   cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.purchased-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #2e7d3e;
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.8rem;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.purchased-badge::before {
+  content: '✓';
+  background: #52b069;
+  color: #fff;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
 }
 
 @keyframes popIn {
   from {
-    transform: scale(0.9);
+    transform: translate(-50%, -50%) scale(0.88);
     opacity: 0;
   }
-
   to {
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
 }
