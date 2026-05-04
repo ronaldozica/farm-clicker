@@ -3,6 +3,7 @@ import type { CropId } from "./CropDefs";
 export type UpgradeType = "speed" | "tile" | "crop";
 
 export interface UpgradeDef {
+    section: string;
     id: string;
     name: string;
     description: string;
@@ -25,7 +26,8 @@ export const UPGRADES: Record<string, UpgradeDef> = {
         requires: [],
         type: "crop",
         value: "wheat",
-        icon: "\u{1F33D}"
+        icon: "\u{1F33E}",
+        section: "crops"
     },
     crop_carrot: {
         id: "crop_carrot",
@@ -36,54 +38,59 @@ export const UPGRADES: Record<string, UpgradeDef> = {
         requires: ["crop_wheat"],
         type: "crop",
         value: "carrot",
-        icon: "\u{1F955}"
+        icon: "\u{1F955}",
+        section: "crops"
     },
     speed_wheat: {
         id: "speed_wheat",
-        name: "Wheat grows faster",
-        description: "Reduces the growth time of wheat by 200ms.",
+        name: "Wheat fertilizer",
+        description: "Reduces the growth time of wheat.",
         cost: 1000,
         costCrop: "grass",
         requires: ["crop_wheat"],
         type: "speed",
         value: 200,
         targetCrop: "wheat",
-        icon: "\u{1F4A7}"
+        icon: "\u{1F331}",
+        section: "upgrades"
     },
     speed_2_wheat: {
         id: "speed_2_wheat",
-        name: "Wheat grows even faster",
-        description: "Reduces the growth time of wheat by 200ms.",
+        name: "Wheat deluxe fertilizer",
+        description: "Reduces the growth time of wheat even more.",
         cost: 1000,
         costCrop: "wheat",
         requires: ["speed_wheat"],
         type: "speed",
         value: 200,
         targetCrop: "wheat",
-        icon: "\u{2728}"
+        icon: "\u{2728}",
+        section: "upgrades"
     },
     speed_carrot: {
         id: "speed_carrot",
-        name: "Carrot grows faster",
-        description: "Reduces the growth time of carrot by 200ms.",
+        name: "Carrot fertilizer",
+        description: "Reduces the growth time of carrot.",
         cost: 1000,
         costCrop: "wheat",
         requires: ["crop_carrot"],
         type: "speed",
         value: 200,
         targetCrop: "carrot",
-        icon: "\u{1F4A7}"
+        icon: "\u{1F331}",
+        section: "upgrades"
     },
     speed_2_carrot: {
         id: "speed_2_carrot",
-        name: "Carrot grows even faster",
-        description: "Reduces the growth time of carrot by 200ms.",
+        name: "Carrot deluxe fertilizer",
+        description: "Reduces the growth time of carrot even more.",
         cost: 1000,
         costCrop: "carrot",
         requires: ["speed_carrot"],
         type: "speed",
         value: 200,
         targetCrop: "carrot",
-        icon: "\u{2728}"
+        icon: "\u{2728}",
+        section: "upgrades"
     },
 };
