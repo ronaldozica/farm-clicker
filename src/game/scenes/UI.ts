@@ -123,13 +123,13 @@ export class ShopUI {
                 <small class="upgrade-desc">${upgrade.description}</small>
             </div>
             ${isPurchased
-                ? `<div class="purchased-badge">Purchased</div>`
-                : `<button
+        ? `<div class="purchased-badge">Purchased</div>`
+        : `<button
                         id="btn-${upgrade.id}"
                         ${(!hasRequirements || !canAfford) ? 'disabled' : ''}>
                         ${!hasRequirements ? '🔒 Locked' : `Buy (${upgrade.cost} ${costCrop.icon})`}
                    </button>`
-            }
+}
         `;
 
         if (!isPurchased && hasRequirements && canAfford) {

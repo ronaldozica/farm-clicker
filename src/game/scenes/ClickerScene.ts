@@ -32,7 +32,6 @@ export class ClickerScene extends Phaser.Scene {
     private selectedCrop: CropId = DEFAULT_CROP_ID;
     private selectedCropIndex: number = Math.max(0, CROP_IDS.indexOf(DEFAULT_CROP_ID));
 
-
     constructor() {
         super("clicker-scene");
     }
