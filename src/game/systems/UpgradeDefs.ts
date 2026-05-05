@@ -1,6 +1,7 @@
 import type { CropId } from "./CropDefs";
+import type { PetId } from "./PetDefs";
 
-export type UpgradeType = "speed" | "tile" | "crop";
+export type UpgradeType = "speed" | "crop" | "pet";
 
 export interface UpgradeDef {
     section: string;
@@ -11,7 +12,7 @@ export interface UpgradeDef {
     costCrop: CropId;
     requires: string[];
     type: UpgradeType;
-    value: number | CropId;
+    value: number | CropId | PetId;
     targetCrop?: CropId;
     icon: string;
 }
@@ -105,5 +106,17 @@ export const UPGRADES: Record<string, UpgradeDef> = {
         targetCrop: "carrot",
         icon: "\u{2728}",
         section: "upgrades"
+    },
+    bunny: {
+        id: "bunny",
+        name: "Bunny",
+        description: "A cute little bunny.",
+        cost: 1000,
+        costCrop: "carrot",
+        requires: [],
+        type: "pet",
+        value: "bunny",
+        icon: "\u{1F430}",
+        section: "pets"
     },
 };

@@ -3,6 +3,7 @@ import { CROP_IDS, DEFAULT_CROP_ID, getCropDef, type CropAmounts, type CropId } 
 import { GameState } from "../systems/GameState";
 import { SaveSystem } from "../systems/SaveSystem";
 import { ShopUI } from "./UI";
+import { BunnyPet } from "../systems/Bunny";
 
 export class ClickerScene extends Phaser.Scene {
     private counterText!: Phaser.GameObjects.Text;
@@ -23,6 +24,8 @@ export class ClickerScene extends Phaser.Scene {
     private dotGraphics!: Phaser.GameObjects.Graphics;
     private shopButton!: Phaser.GameObjects.Rectangle;
     private shopIcon!: Phaser.GameObjects.Text;
+
+    private bunnyPet!: BunnyPet;
 
     private isBusy: boolean = false;
     private trunkHealth: number = 10;
@@ -51,6 +54,11 @@ export class ClickerScene extends Phaser.Scene {
                 frameHeight: crop.preload.frameHeight
             });
         });
+
+        this.load.spritesheet("bunny-item", "bunny.png", {
+            frameWidth: 425,
+            frameHeight: 300
+        });
     }
 
     create() {
@@ -59,6 +67,9 @@ export class ClickerScene extends Phaser.Scene {
         this.createAnimations();
         this.initializeUI();
         this.setupResizeHandler();
+
+        this.bunnyPet = new BunnyPet(this);
+        this.syncBunnyPetState();
     }
 
     private setupEventListeners() {
@@ -69,8 +80,18 @@ export class ClickerScene extends Phaser.Scene {
 
         GameState.instance.on("upgradesChanged", () => {
             this.refreshAvailableCrops();
+            this.syncBunnyPetState();
             SaveSystem.save();
         });
+    }
+
+    private syncBunnyPetState(): void {
+        const hasBunny = GameState.instance.purchasedUpgrades.includes("bunny");
+        if (hasBunny) {
+            this.bunnyPet.activate();
+        } else {
+            this.bunnyPet.deactivate();
+        }
     }
 
     private createAnimations() {
@@ -88,6 +109,13 @@ export class ClickerScene extends Phaser.Scene {
                 frames: this.anims.generateFrameNumbers(crop.preload.key, crop.growthFrames),
                 frameRate: 5, repeat: 0
             });
+        });
+
+        this.anims.create({
+            key: "bunny-run",
+            frames: this.anims.generateFrameNumbers("bunny-item", { start: 0, end: 9 }),
+            frameRate: 12,
+            repeat: -1
         });
     }
 
