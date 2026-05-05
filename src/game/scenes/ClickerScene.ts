@@ -21,6 +21,8 @@ export class ClickerScene extends Phaser.Scene {
     private btnPrev!: Phaser.GameObjects.Text;
     private btnNext!: Phaser.GameObjects.Text;
     private dotGraphics!: Phaser.GameObjects.Graphics;
+    private shopButton!: Phaser.GameObjects.Rectangle;
+    private shopIcon!: Phaser.GameObjects.Text;
 
     private isBusy: boolean = false;
     private trunkHealth: number = 10;
@@ -32,6 +34,7 @@ export class ClickerScene extends Phaser.Scene {
     private selectedCrop: CropId = DEFAULT_CROP_ID;
     private selectedCropIndex: number = Math.max(0, CROP_IDS.indexOf(DEFAULT_CROP_ID));
     private readonly smallScreenMaxWidth = 520;
+    private readonly shopRightMarginRatio = 0.1;
 
     constructor() {
         super("clicker-scene");
@@ -106,18 +109,40 @@ export class ClickerScene extends Phaser.Scene {
         return this.cameras.main.width <= this.smallScreenMaxWidth;
     }
 
+    private getCounterY(height: number) {
+        return height * 0.1;
+    }
+
     private updateScoreText(crops: CropAmounts = GameState.instance.getCropAmounts()) {
         this.counterText.setText(this.formatScoreText(crops));
         this.updateCounterBackground();
+    }
+
+    private getShopButtonSize(width: number) {
+        return width <= this.smallScreenMaxWidth ? 48 : 80;
+    }
+
+    private layoutShopButton(width: number, counterY: number) {
+        const size = this.getShopButtonSize(width);
+        const rightMargin = width * this.shopRightMarginRatio;
+        const x = width - rightMargin - size / 2;
+        const isSmallScreen = width <= this.smallScreenMaxWidth;
+
+        this.shopButton.setPosition(x, counterY);
+        this.shopButton.setSize(size, size);
+        this.shopButton.setDisplaySize(size, size);
+        this.shopButton.setStrokeStyle(isSmallScreen ? 3 : 4, 0x4e342e);
+
+        this.shopIcon.setPosition(x, counterY);
+        this.shopIcon.setFontSize(isSmallScreen ? 28 : 32);
     }
 
     private initializeUI() {
         this.refreshAvailableCrops();
         const fullH = this.cameras.main.height;
         const centerX = this.cameras.main.width / 2;
-        const counterY = fullH * 0.1;
+        const counterY = this.getCounterY(fullH);
         const buttonY = fullH - (fullH * 0.1);
-        const shopOffset = 30;
 
         this.createBackground();
         this.createScoreUI(centerX, counterY);
@@ -127,7 +152,7 @@ export class ClickerScene extends Phaser.Scene {
 
         this.createCropSelector(centerX, buttonY);
         this.createPlantButton(centerX, buttonY);
-        this.createShopButton(centerX + shopOffset, buttonY);
+        this.createShopButton();
     }
 
     private createBackground() {
@@ -401,6 +426,7 @@ export class ClickerScene extends Phaser.Scene {
             const w = gameSize.width || this.cameras.main.width;
             const h = gameSize.height || this.cameras.main.height;
             const centerX = w / 2;
+            const counterY = this.getCounterY(h);
 
             this.bg.setDisplaySize(w, h);
             this.updateBackgroundScale(w);
@@ -408,8 +434,9 @@ export class ClickerScene extends Phaser.Scene {
             this.farmContainer.x = centerX;
 
             this.counterText.x = centerX;
-            this.counterText.y = 48;
+            this.counterText.y = counterY;
             this.updateScoreText();
+            this.layoutShopButton(w, counterY);
 
             if (this.buttonBg && this.buttonText) {
                 this.buttonBg.x = centerX;
@@ -565,26 +592,35 @@ export class ClickerScene extends Phaser.Scene {
         const x = this.cameras.main.width / 2 - width / 2;
 
         const fullH = this.cameras.main.height;
-        const cropOffset = 150;
+        const cropOffset = 110;
         const y = fullH / 2 + cropOffset;
 
         this.progressBar.clear();
         if (progress <= 0) return;
 
+        this.progressBar.lineStyle(2, 0x5d4037).strokeRect(x, y, width, 15);
         this.progressBar.fillStyle(0x444444).fillRect(x, y, width, 15);
         this.progressBar.fillStyle(0xffeb3b).fillRect(x, y, width * progress, 15);
     }
 
-    private createShopButton(centerX: number, y: number) {
-        const shopBtn = this.add.rectangle(centerX + 120, y, 80, 80, 0x8d6e63)
-            .setStrokeStyle(4, 0x4e342e)
-            .setInteractive({ useHandCursor: true });
+    private createShopButton() {
+        const width = this.cameras.main.width;
+        const counterY = this.getCounterY(this.cameras.main.height);
 
-        this.add.text(centerX + 120, y, "\u{1F6D2}", { fontSize: "32px" }).setOrigin(0.5);
+        this.shopButton = this.add.rectangle(0, 0, 80, 80, 0x8d6e63)
+            .setStrokeStyle(4, 0x4e342e)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(5);
+
+        this.shopIcon = this.add.text(0, 0, "\u{1F6D2}", { fontSize: "32px" })
+            .setOrigin(0.5)
+            .setDepth(6);
+
+        this.layoutShopButton(width, counterY);
 
         const shop = new ShopUI();
 
-        shopBtn.on("pointerdown", () => {
+        this.shopButton.on("pointerdown", () => {
             shop.open();
         });
     }
