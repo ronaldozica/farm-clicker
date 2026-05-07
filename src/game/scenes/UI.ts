@@ -4,7 +4,8 @@ import { GameState } from '../systems/GameState';
 
 const SECTIONS: { id: string; label: string; icon: string }[] = [
     { id: 'crops', label: 'Crops', icon: '🌱' },
-    { id: 'fertilizers', label: 'Fertilizers', icon: '🧪' },
+    { id: 'upgrades', label: 'Fertilizers', icon: '🧪' },
+    { id: 'pets', label: 'Pets', icon: '🐾' },
 ];
 
 export class ShopUI {

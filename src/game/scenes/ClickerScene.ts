@@ -4,6 +4,7 @@ import { GameState } from "../systems/GameState";
 import { SaveSystem } from "../systems/SaveSystem";
 import { ShopUI } from "./UI";
 import { BunnyPet } from "../systems/Bunny";
+import { COW_FRAME_HEIGHT, COW_FRAME_WIDTH, CowPet } from "../systems/Cow";
 
 export class ClickerScene extends Phaser.Scene {
     private counterText!: Phaser.GameObjects.Text;
@@ -26,6 +27,7 @@ export class ClickerScene extends Phaser.Scene {
     private shopIcon!: Phaser.GameObjects.Text;
 
     private bunnyPet!: BunnyPet;
+    private cowPet!: CowPet;
 
     private isBusy: boolean = false;
     private trunkHealth: number = 10;
@@ -59,6 +61,11 @@ export class ClickerScene extends Phaser.Scene {
             frameWidth: 425,
             frameHeight: 300
         });
+
+        this.load.spritesheet("cow", "cow.png", {
+            frameWidth: COW_FRAME_WIDTH,
+            frameHeight: COW_FRAME_HEIGHT,
+        });
     }
 
     create() {
@@ -70,6 +77,10 @@ export class ClickerScene extends Phaser.Scene {
 
         this.bunnyPet = new BunnyPet(this);
         this.syncBunnyPetState();
+
+        this.cowPet = new CowPet(this);
+        this.cowPet.registerAnimations();
+        this.syncCowPetState();
     }
 
     private setupEventListeners() {
@@ -81,6 +92,7 @@ export class ClickerScene extends Phaser.Scene {
         GameState.instance.on("upgradesChanged", () => {
             this.refreshAvailableCrops();
             this.syncBunnyPetState();
+            this.syncCowPetState();
             SaveSystem.save();
         });
     }
@@ -92,6 +104,11 @@ export class ClickerScene extends Phaser.Scene {
         } else {
             this.bunnyPet.deactivate();
         }
+    }
+
+    private syncCowPetState(): void {
+        const cowCount = GameState.instance.getCowCount();
+        this.cowPet.syncCowCount(cowCount);
     }
 
     private createAnimations() {
@@ -480,6 +497,8 @@ export class ClickerScene extends Phaser.Scene {
                 this.btnNext.setPosition(centerX + 60, selectorY);
                 this.updateCarouselVisuals(centerX, selectorY);
             }
+
+            this.cowPet?.onResize(w, h);
         });
     }
 

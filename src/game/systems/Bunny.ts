@@ -11,7 +11,7 @@ export class BunnyPet {
     private active: boolean = false;
     private running: boolean = false;
 
-    private readonly AVG_INTERVAL_MS = 100_00;
+    private readonly AVG_INTERVAL_MS = 50_00;
     private readonly RUN_DURATION_MS = 2_800;
     private readonly TRAIL_COUNT = 6;
     private readonly Y_FRACTION = 0.32;

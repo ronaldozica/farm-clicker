@@ -1,4 +1,6 @@
-export type PetId = "bunny";
+import { COW_FRAME_HEIGHT, COW_FRAME_WIDTH } from "./Cow";
+
+export type PetId = "bunny" | "cow";
 
 export type PetDef = {
     kind: string;
@@ -26,6 +28,20 @@ export const PET_DEFS: Record<string, PetDef> = {
             path: "bunny.png",
             frameWidth: 425,
             frameHeight: 300
+        },
+        scale: 1.0,
+        y: 75,
+    },
+    cow: {
+        kind: "cow",
+        label: "Cow",
+        icon: "\u{1F404}",
+        amountKeys: ["cow"],
+        preload: {
+            key: "cow",
+            path: "cow.png",
+            frameWidth: COW_FRAME_WIDTH,
+            frameHeight: COW_FRAME_HEIGHT
         },
         scale: 1.0,
         y: 75,

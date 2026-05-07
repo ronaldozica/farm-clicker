@@ -7,6 +7,7 @@ type SaveData = {
     cropAmounts?: Partial<CropAmounts>;
     purchasedUpgrades?: string[];
     unlockedCrops?: CropId[];
+    cowCount?: number;
 } & Record<string, unknown>;
 
 export class SaveSystem {
@@ -15,6 +16,7 @@ export class SaveSystem {
             cropAmounts: GameState.instance.getCropAmounts(),
             purchasedUpgrades: GameState.instance.purchasedUpgrades,
             unlockedCrops: GameState.instance.unlockedCrops,
+            cowCount: GameState.instance.getCowCount(),
         };
 
         localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -37,6 +39,12 @@ export class SaveSystem {
 
         GameState.instance.purchasedUpgrades = data.purchasedUpgrades ?? [];
         GameState.instance.unlockedCrops = data.unlockedCrops?.filter(cropId => CROP_IDS.includes(cropId)) ?? [...STARTING_CROP_IDS];
+        GameState.instance.restoreCowCount(
+            typeof data.cowCount === "number"
+                ? data.cowCount
+                : GameState.instance.purchasedUpgrades.includes("cow") ? 1 : 0
+        );
+
         GameState.instance.purchasedUpgrades.forEach(upgradeId => {
             if (upgradeId === "crop_wheat") GameState.instance.unlockCrop("wheat");
             if (upgradeId === "crop_carrot") GameState.instance.unlockCrop("carrot");

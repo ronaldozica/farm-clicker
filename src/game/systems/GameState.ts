@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { CROP_IDS, STARTING_CROP_IDS, createEmptyCropAmounts, type CropAmounts, type CropId } from "./CropDefs";
 import { UPGRADES, type UpgradeDef } from "./UpgradeDefs";
+import { MAX_COWS } from "./Cow";
 
 export class GameState extends Phaser.Events.EventEmitter {
     private static _instance: GameState;
@@ -8,6 +9,7 @@ export class GameState extends Phaser.Events.EventEmitter {
     public unlockedCrops: CropId[] = [...STARTING_CROP_IDS];
     public cropAmounts: CropAmounts = createEmptyCropAmounts();
     public totalClicks: number = 0;
+    private _cowCount: number = 0;
 
     private constructor() {
         super();
@@ -20,10 +22,24 @@ export class GameState extends Phaser.Events.EventEmitter {
         return this._instance;
     }
 
+    public getCowCount(): number {
+        return this._cowCount;
+    }
+
+    public buyCow(): boolean {
+        if (this._cowCount >= MAX_COWS) return false;
+        this._cowCount++;
+        this.emit("upgradesChanged");
+        return true;
+    }
+
+    public restoreCowCount(count: number): void {
+        this._cowCount = Phaser.Math.Clamp(count, 0, MAX_COWS);
+    }
+
     get grass(): number {
         return this.getCropAmount("grass");
     }
-
     set grass(amount: number) {
         this.setCropAmount("grass", amount);
     }
@@ -31,7 +47,6 @@ export class GameState extends Phaser.Events.EventEmitter {
     get wheat(): number {
         return this.getCropAmount("wheat");
     }
-
     set wheat(amount: number) {
         this.setCropAmount("wheat", amount);
     }
@@ -39,7 +54,6 @@ export class GameState extends Phaser.Events.EventEmitter {
     get carrots(): number {
         return this.getCropAmount("carrot");
     }
-
     set carrots(amount: number) {
         this.setCropAmount("carrot", amount);
     }
@@ -71,29 +85,22 @@ export class GameState extends Phaser.Events.EventEmitter {
 
     addClick(cropType: CropId, reward?: number) {
         const finalReward = reward ?? 1;
-
         this.totalClicks++;
         this.setCropAmount(cropType, this.getCropAmount(cropType) + finalReward);
-
         this.emit("scoreChanged", this.getCropAmounts());
         this.emit("statsChanged", this.totalClicks);
     }
 
     public buyUpgrade(upgradeId: string): boolean {
         const upgrade = UPGRADES[upgradeId];
-
         if (!upgrade) return false;
         if (this.purchasedUpgrades.includes(upgradeId)) return false;
-
         const hasRequirements = upgrade.requires.every(req => this.purchasedUpgrades.includes(req));
         if (!hasRequirements) return false;
         if (this.getCropAmount(upgrade.costCrop) < upgrade.cost) return false;
-
         this.setCropAmount(upgrade.costCrop, this.getCropAmount(upgrade.costCrop) - upgrade.cost);
         this.purchasedUpgrades.push(upgradeId);
-
         this.applyUpgradeEffect(upgrade);
-
         this.emit("scoreChanged", this.getCropAmounts());
         this.emit("upgradesChanged");
         return true;
@@ -113,6 +120,10 @@ export class GameState extends Phaser.Events.EventEmitter {
     private applyUpgradeEffect(upgrade: UpgradeDef) {
         if (upgrade.type === "crop") {
             this.unlockCrop(upgrade.value as CropId);
+        }
+
+        if (upgrade.type === "pet" && upgrade.value === "cow") {
+            this._cowCount = Phaser.Math.Clamp(this._cowCount + 1, 0, MAX_COWS);
         }
     }
 }

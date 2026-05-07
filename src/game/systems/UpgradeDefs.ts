@@ -110,7 +110,7 @@ export const UPGRADES: Record<string, UpgradeDef> = {
     bunny: {
         id: "bunny",
         name: "Bunny",
-        description: "A cute little bunny.",
+        description: "A bunny that helps you farm carrots.",
         cost: 1000,
         costCrop: "carrot",
         requires: [],
@@ -119,4 +119,16 @@ export const UPGRADES: Record<string, UpgradeDef> = {
         icon: "\u{1F430}",
         section: "pets"
     },
+    cow: {
+        id: "cow",
+        name: "Cow",
+        description: "A cow that helps you farm grass.",
+        cost: 1000,
+        costCrop: "grass",
+        requires: [],
+        type: "pet",
+        value: "cow",
+        icon: "\u{1F404}",
+        section: "pets"
+    }
 };
