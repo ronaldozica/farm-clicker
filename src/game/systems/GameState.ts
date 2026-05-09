@@ -3,6 +3,7 @@ import { CROP_IDS, STARTING_CROP_IDS, createEmptyCropAmounts, type CropAmounts, 
 import { UPGRADES, type UpgradeDef } from "./UpgradeDefs";
 import { MAX_COWS } from "./Cow";
 import { MAX_BUNNIES } from "./Bunny";
+import { MAX_FARMERS } from "./Farmer";
 
 export class GameState extends Phaser.Events.EventEmitter {
     private static _instance: GameState;
@@ -12,6 +13,7 @@ export class GameState extends Phaser.Events.EventEmitter {
     public totalClicks: number = 0;
     private _cowCount: number = 0;
     private _bunnyCount: number = 0;
+    private _farmerCount: number = 0;
 
     private constructor() {
         super();
@@ -32,6 +34,10 @@ export class GameState extends Phaser.Events.EventEmitter {
         return this._bunnyCount;
     }
 
+    public getFarmerCount(): number {
+        return this._farmerCount;
+    }
+
     public buyCow(): boolean {
         if (this._cowCount >= MAX_COWS) return false;
         this._cowCount++;
@@ -45,6 +51,10 @@ export class GameState extends Phaser.Events.EventEmitter {
 
     public restoreBunnyCount(count: number): void {
         this._bunnyCount = Phaser.Math.Clamp(count, 0, MAX_BUNNIES);
+    }
+
+    public restoreFarmerCount(count: number): void {
+        this._farmerCount = Phaser.Math.Clamp(count, 0, MAX_FARMERS);
     }
 
     get grass(): number {
@@ -104,11 +114,13 @@ export class GameState extends Phaser.Events.EventEmitter {
     public buyUpgrade(upgradeId: string): boolean {
         const upgrade = UPGRADES[upgradeId];
         if (!upgrade) return false;
-        const isCowUpgrade = upgrade.type === "pet" && upgrade.value === "cow";
-        const isBunnyUpgrade = upgrade.type === "pet" && upgrade.value === "bunny";
-        if (!isCowUpgrade && !isBunnyUpgrade && this.purchasedUpgrades.includes(upgradeId)) return false;
+        const isCowUpgrade = upgrade.type === "autoClicker" && upgrade.value === "cow";
+        const isBunnyUpgrade = upgrade.type === "autoClicker" && upgrade.value === "bunny";
+        const isFarmerUpgrade = upgrade.type === "autoClicker" && upgrade.value === "farmer";
+        if (!isCowUpgrade && !isBunnyUpgrade && !isFarmerUpgrade && this.purchasedUpgrades.includes(upgradeId)) return false;
         if (isCowUpgrade && this._cowCount >= MAX_COWS) return false;
         if (isBunnyUpgrade && this._bunnyCount >= MAX_BUNNIES) return false;
+        if (isFarmerUpgrade && this._farmerCount >= MAX_FARMERS) return false;
         const hasRequirements = upgrade.requires.every(req => this.purchasedUpgrades.includes(req));
         if (!hasRequirements) return false;
         if (this.getCropAmount(upgrade.costCrop) < upgrade.cost) return false;
@@ -138,12 +150,16 @@ export class GameState extends Phaser.Events.EventEmitter {
             this.unlockCrop(upgrade.value as CropId);
         }
 
-        if (upgrade.type === "pet" && upgrade.value === "cow") {
+        if (upgrade.type === "autoClicker" && upgrade.value === "cow") {
             this._cowCount = Phaser.Math.Clamp(this._cowCount + 1, 0, MAX_COWS);
         }
 
-        if (upgrade.type === "pet" && upgrade.value === "bunny") {
+        if (upgrade.type === "autoClicker" && upgrade.value === "bunny") {
             this._bunnyCount = Phaser.Math.Clamp(this._bunnyCount + 1, 0, MAX_BUNNIES);
+        }
+
+        if (upgrade.type === "autoClicker" && upgrade.value === "farmer") {
+            this._farmerCount = Phaser.Math.Clamp(this._farmerCount + 1, 0, MAX_FARMERS);
         }
     }
 }

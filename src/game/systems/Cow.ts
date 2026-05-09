@@ -6,8 +6,8 @@ export const COW_FRAME_HEIGHT = 170;
 const COW_WALK_FRAMES = { start: 0, end: 4 };
 const COW_EAT_FRAMES = { start: 5, end: 8 };
 
-const COW_SCALE_MIN = 0.45;
-const COW_SCALE_MAX = 0.65;
+const COW_SCALE_MIN = 0.38;
+const COW_SCALE_MAX = 0.55;
 const COW_WALK_SPEED = 90;
 const COW_WALK_DURATION_MIN = 3500;
 const COW_WALK_DURATION_MAX = 6500;
@@ -39,7 +39,7 @@ interface CowInstance {
     active: boolean;
 }
 
-export class CowPet {
+export class CowAutoClicker {
     private scene: Phaser.Scene;
     private cows: CowInstance[] = [];
     private cowCount: number = 0;

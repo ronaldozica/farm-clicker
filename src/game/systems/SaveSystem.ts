@@ -9,6 +9,7 @@ type SaveData = {
     unlockedCrops?: CropId[];
     cowCount?: number;
     bunnyCount?: number;
+    farmerCount?: number;
 } & Record<string, unknown>;
 
 export class SaveSystem {
@@ -19,6 +20,7 @@ export class SaveSystem {
             unlockedCrops: GameState.instance.unlockedCrops,
             cowCount: GameState.instance.getCowCount(),
             bunnyCount: GameState.instance.getBunnyCount(),
+            farmerCount: GameState.instance.getFarmerCount(),
         };
 
         localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -50,6 +52,11 @@ export class SaveSystem {
             typeof data.bunnyCount === "number"
                 ? data.bunnyCount
                 : GameState.instance.purchasedUpgrades.includes("bunny") ? 1 : 0
+        );
+        GameState.instance.restoreFarmerCount(
+            typeof data.farmerCount === "number"
+                ? data.farmerCount
+                : GameState.instance.purchasedUpgrades.includes("farmer") ? 1 : 0
         );
 
         GameState.instance.purchasedUpgrades.forEach(upgradeId => {

@@ -3,11 +3,12 @@ import { getCropDef } from '../systems/CropDefs';
 import { GameState } from '../systems/GameState';
 import { MAX_COWS } from '../systems/Cow';
 import { MAX_BUNNIES } from '../systems/Bunny';
+import { MAX_FARMERS } from '../systems/Farmer';
 
 const SECTIONS: { id: string; label: string; icon: string }[] = [
-    { id: 'crops', label: 'Crops', icon: '🌱' },
-    { id: 'upgrades', label: 'Fertilizers', icon: '🧪' },
-    { id: 'pets', label: 'Pets', icon: '🐾' },
+    { id: 'crops', label: 'Crops', icon: '\u{1F331}' },
+    { id: 'upgrades', label: 'Fertilizers', icon: '\u{1F9EA}' },
+    { id: 'autoClickers', label: 'Auto Clickers', icon: '\u{1F916}' },
 ];
 
 export class ShopUI {
@@ -36,10 +37,10 @@ export class ShopUI {
         const purchased = GameState.instance.purchasedUpgrades;
         this.modal.innerHTML = `
             <div class="modal-header">
-                <h2 class="modal-title">🌾 Upgrade Shop</h2>
+                <h2 class="modal-title">\u{1F33E} Upgrade Shop</h2>
                 <div style="display:flex;align-items:center;gap:10px;">
                     <div id="resource-chips"></div>
-                    <button id="close-shop">✕</button>
+                    <button id="close-shop">\u2715</button>
                 </div>
             </div>
             <div id="upgrade-tree"></div>
@@ -99,7 +100,7 @@ export class ShopUI {
             fallbackSection.className = 'upgrade-section';
             fallbackSection.innerHTML = `
                 <div class="section-header">
-                    <span class="section-icon">📦</span>
+                    <span class="section-icon">\u{1F4E6}</span>
                     <h3 class="section-title">Others</h3>
                 </div>
             `;
@@ -112,19 +113,19 @@ export class ShopUI {
 
     private buildNode(upgrade: UpgradeDef): HTMLElement {
         const purchased = GameState.instance.purchasedUpgrades;
-        const petProgress = this.getRepeatablePetProgress(upgrade);
+        const autoClickerProgress = this.getRepeatableAutoClickerProgress(upgrade);
         const isPurchased = this.isUpgradeComplete(upgrade, purchased);
         const hasRequirements = upgrade.requires.every(req => purchased.includes(req));
         const canAfford = GameState.instance.getCropAmount(upgrade.costCrop) >= upgrade.cost;
         const costCrop = getCropDef(upgrade.costCrop);
-        const description = petProgress
-            ? `${upgrade.description} (${petProgress.count}/${petProgress.max})`
+        const description = autoClickerProgress
+            ? `${upgrade.description} (${autoClickerProgress.count}/${autoClickerProgress.max})`
             : upgrade.description;
-        const purchasedBadge = petProgress
-            ? `Max ${petProgress.count}/${petProgress.max}`
+        const purchasedBadge = autoClickerProgress
+            ? `Max ${autoClickerProgress.count}/${autoClickerProgress.max}`
             : 'Purchased';
-        const buyLabel = petProgress
-            ? `Buy (${petProgress.count}/${petProgress.max}) (${upgrade.cost} ${costCrop.icon})`
+        const buyLabel = autoClickerProgress
+            ? `Buy (${autoClickerProgress.count}/${autoClickerProgress.max}) (${upgrade.cost} ${costCrop.icon})`
             : `Buy (${upgrade.cost} ${costCrop.icon})`;
 
         let statusClass = 'available';
@@ -161,16 +162,16 @@ export class ShopUI {
     }
 
     private isUpgradeComplete(upgrade: UpgradeDef, purchased: string[]): boolean {
-        const petProgress = this.getRepeatablePetProgress(upgrade);
-        if (petProgress) {
-            return petProgress.count >= petProgress.max;
+        const autoClickerProgress = this.getRepeatableAutoClickerProgress(upgrade);
+        if (autoClickerProgress) {
+            return autoClickerProgress.count >= autoClickerProgress.max;
         }
 
         return purchased.includes(upgrade.id);
     }
 
-    private getRepeatablePetProgress(upgrade: UpgradeDef): { count: number; max: number } | undefined {
-        if (upgrade.type !== "pet") return undefined;
+    private getRepeatableAutoClickerProgress(upgrade: UpgradeDef): { count: number; max: number } | undefined {
+        if (upgrade.type !== "autoClicker") return undefined;
 
         if (upgrade.value === "cow") {
             return { count: GameState.instance.getCowCount(), max: MAX_COWS };
@@ -178,6 +179,10 @@ export class ShopUI {
 
         if (upgrade.value === "bunny") {
             return { count: GameState.instance.getBunnyCount(), max: MAX_BUNNIES };
+        }
+
+        if (upgrade.value === "farmer") {
+            return { count: GameState.instance.getFarmerCount(), max: MAX_FARMERS };
         }
 
         return undefined;

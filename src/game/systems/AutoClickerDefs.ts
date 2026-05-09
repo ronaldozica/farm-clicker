@@ -1,8 +1,9 @@
 import { COW_FRAME_HEIGHT, COW_FRAME_WIDTH } from "./Cow";
+import { FARMER_FRAME_HEIGHT, FARMER_FRAME_WIDTH } from "./Farmer";
 
-export type PetId = "bunny" | "cow";
+export type AutoClickerId = "bunny" | "cow" | "farmer";
 
-export type PetDef = {
+export type AutoClickerDef = {
     kind: string;
     label: string;
     icon: string;
@@ -17,7 +18,7 @@ export type PetDef = {
     y: number;
 };
 
-export const PET_DEFS: Record<string, PetDef> = {
+export const AUTO_CLICKER_DEFS: Record<string, AutoClickerDef> = {
     bunny: {
         kind: "bunny",
         label: "Bunny",
@@ -46,4 +47,18 @@ export const PET_DEFS: Record<string, PetDef> = {
         scale: 1.0,
         y: 75,
     },
-} as const satisfies Record<string, PetDef>;
+    farmer: {
+        kind: "farmer",
+        label: "Farmer",
+        icon: "\u{1F9D1}\u200D\u{1F33E}",
+        amountKeys: ["farmer"],
+        preload: {
+            key: "farmer",
+            path: "farmer.png",
+            frameWidth: FARMER_FRAME_WIDTH,
+            frameHeight: FARMER_FRAME_HEIGHT
+        },
+        scale: 1.0,
+        y: 75,
+    },
+} as const satisfies Record<string, AutoClickerDef>;

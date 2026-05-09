@@ -10,7 +10,7 @@ interface BunnyInstance {
     yOffset: number;
 }
 
-export class BunnyPet {
+export class BunnyAutoClicker {
     private scene: Phaser.Scene;
     private bunnies: BunnyInstance[] = [];
     private runTweens: Phaser.Tweens.Tween[] = [];
@@ -24,7 +24,7 @@ export class BunnyPet {
     private readonly RUN_DURATION_MS = 2_800;
     private readonly TRAIL_COUNT = 6;
     private readonly Y_FRACTION = 0.32;
-    private readonly BUNNY_SCALE = 0.32;
+    private readonly BUNNY_SCALE = 0.18;
     private readonly DEPTH = 1.2;
 
     constructor(scene: Phaser.Scene) {

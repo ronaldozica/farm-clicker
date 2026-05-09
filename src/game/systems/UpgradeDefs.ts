@@ -1,7 +1,7 @@
 import type { CropId } from "./CropDefs";
-import type { PetId } from "./PetDefs";
+import type { AutoClickerId } from "./AutoClickerDefs";
 
-export type UpgradeType = "speed" | "crop" | "pet";
+export type UpgradeType = "speed" | "crop" | "autoClicker";
 
 export interface UpgradeDef {
     section: string;
@@ -12,7 +12,7 @@ export interface UpgradeDef {
     costCrop: CropId;
     requires: string[];
     type: UpgradeType;
-    value: number | CropId | PetId;
+    value: number | CropId | AutoClickerId;
     targetCrop?: CropId;
     icon: string;
 }
@@ -110,25 +110,37 @@ export const UPGRADES: Record<string, UpgradeDef> = {
     bunny: {
         id: "bunny",
         name: "Bunny",
-        description: "A bunny that helps you farm carrots.",
+        description: "An auto clicker that helps you farm carrots.",
         cost: 1000,
         costCrop: "carrot",
         requires: [],
-        type: "pet",
+        type: "autoClicker",
         value: "bunny",
         icon: "\u{1F430}",
-        section: "pets"
+        section: "autoClickers"
     },
     cow: {
         id: "cow",
         name: "Cow",
-        description: "A cow that helps you farm grass.",
+        description: "An auto clicker that helps you farm grass.",
         cost: 1000,
         costCrop: "grass",
         requires: [],
-        type: "pet",
+        type: "autoClicker",
         value: "cow",
         icon: "\u{1F404}",
-        section: "pets"
+        section: "autoClickers"
+    },
+    farmer: {
+        id: "farmer",
+        name: "Farmer",
+        description: "An auto clicker that grows wheat and harvests it for you.",
+        cost: 1000,
+        costCrop: "wheat",
+        requires: ["crop_wheat"],
+        type: "autoClicker",
+        value: "farmer",
+        icon: "\u{1F9D1}\u200D\u{1F33E}",
+        section: "autoClickers"
     }
 };

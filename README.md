@@ -3,7 +3,7 @@
 
   <p>
     A cozy browser clicker game where you harvest crops, unlock upgrades,
-    and collect helpful pets for your tiny farm.
+    and collect helpful auto clickers for your tiny farm.
   </p>
 
   <p>
@@ -37,7 +37,7 @@
 **Farm Clicker** is a lightweight incremental farming game built with
 **Phaser**, **TypeScript**, and **Vite**. The player starts by cutting grass,
 uses resources to unlock new crops, improves growth speed with fertilizers,
-and buys pets that generate resources automatically.
+and buys auto clickers that generate resources automatically.
 
 The game is designed as a responsive full-screen browser experience and keeps
 progress saved locally through the browser's `localStorage`.
@@ -54,13 +54,14 @@ Farm Clicker is available on both desktop and mobile browsers:
 - **Multiple crop types**: grass, wheat, and carrots.
 - **Unlockable crop progression** through the in-game shop.
 - **Fertilizer upgrades** that reduce crop growth time.
-- **Pet helpers**:
+- **Auto clicker helpers**:
   - Bunny runs across the farm and produces carrots.
   - Cows wander, eat, and produce grass.
+  - Farmer waits for wheat to grow, cuts it, and produces wheat.
 - **Responsive Phaser canvas** that adapts to desktop and smaller screens.
-- **Animated sprites** for crops and pets.
+- **Animated sprites** for crops and auto clickers.
 - **Persistent save system** using `localStorage`.
-- **Modal upgrade shop** with crop, fertilizer, and pet sections.
+- **Modal upgrade shop** with crop, fertilizer, and auto clicker sections.
 
 ## Gameplay
 
@@ -70,7 +71,7 @@ The main loop is simple:
 2. Open the shop and unlock wheat.
 3. Use wheat to unlock carrots.
 4. Buy fertilizers to speed up crop growth.
-5. Purchase pets to automate parts of the farm.
+5. Purchase auto clickers to automate parts of the farm.
 6. Keep expanding your production flow.
 
 ### Crops
@@ -79,7 +80,7 @@ The main loop is simple:
 | --- | --- | --- |
 | Grass | Starting crop | Can be cut immediately and may spawn rare reward frames. |
 | Wheat | Unlockable crop | Grows over time before it can be harvested for a bonus. |
-| Carrot | Unlockable crop | Slower crop with stronger late-game use and pet synergy. |
+| Carrot | Unlockable crop | Slower crop with stronger late-game use and auto clicker synergy. |
 
 ### Upgrades
 
@@ -87,7 +88,7 @@ The main loop is simple:
 | --- | --- | --- |
 | Crops | Buy wheat, buy carrot | Unlock new crop types. |
 | Fertilizers | Wheat fertilizer, carrot deluxe fertilizer | Reduce crop growth duration. |
-| Pets | Bunny, cow | Add automatic resource generation. |
+| Auto Clickers | Bunny, cow, farmer | Add automatic resource generation. |
 
 ## Tech Stack
 
@@ -152,6 +153,7 @@ farm-clicker/
 │   ├── carrot.png
 │   ├── cow.png
 │   ├── dirt-bg.png
+│   ├── farmer.png
 │   ├── grass-bg.png
 │   ├── grass.png
 │   └── wheat.png
@@ -163,11 +165,12 @@ farm-clicker/
 │   │   │   ├── ClickerScene.ts
 │   │   │   └── UI.ts
 │   │   ├── systems/
+│   │   │   ├── AutoClickerDefs.ts
 │   │   │   ├── Bunny.ts
 │   │   │   ├── Cow.ts
 │   │   │   ├── CropDefs.ts
+│   │   │   ├── Farmer.ts
 │   │   │   ├── GameState.ts
-│   │   │   ├── PetDefs.ts
 │   │   │   ├── SaveSystem.ts
 │   │   │   └── UpgradeDefs.ts
 │   │   └── Game.ts
@@ -195,6 +198,8 @@ A singleton event emitter that stores the current game state:
 - Unlocked crops.
 - Total clicks.
 - Cow count.
+- Bunny count.
+- Farmer count.
 
 It also exposes the core actions used by the scene and UI, such as buying
 upgrades, unlocking crops, and adding harvested resources.
@@ -210,6 +215,8 @@ Saved data includes:
 - Purchased upgrades.
 - Unlocked crops.
 - Cow count.
+- Bunny count.
+- Farmer count.
 
 The loader also contains compatibility handling for older crop amount keys.
 
@@ -223,10 +230,10 @@ requirements, type, target crop, icon, and shop section.
 Central definition file for crop behavior, spritesheet metadata, growth timing,
 reward values, and display labels.
 
-### `Bunny` and `Cow`
+### `Bunny`, `Cow`, and `Farmer`
 
-Pet systems that add autonomous resource generation and animated activity to the
-farm scene.
+Auto clicker systems that add autonomous resource generation and animated
+activity to the farm scene.
 
 ## Assets
 
@@ -238,6 +245,7 @@ The project includes sprites and backgrounds for:
 - Carrots.
 - Bunny.
 - Cow.
+- Farmer.
 - Dirt patch.
 - Grass background.
 - Icons and favicon.

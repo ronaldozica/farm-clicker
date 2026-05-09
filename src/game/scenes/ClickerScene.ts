@@ -3,8 +3,9 @@ import { CROP_IDS, DEFAULT_CROP_ID, getCropDef, type CropAmounts, type CropId } 
 import { GameState } from "../systems/GameState";
 import { SaveSystem } from "../systems/SaveSystem";
 import { ShopUI } from "./UI";
-import { BunnyPet } from "../systems/Bunny";
-import { COW_FRAME_HEIGHT, COW_FRAME_WIDTH, CowPet } from "../systems/Cow";
+import { BunnyAutoClicker } from "../systems/Bunny";
+import { COW_FRAME_HEIGHT, COW_FRAME_WIDTH, CowAutoClicker } from "../systems/Cow";
+import { FARMER_FRAME_HEIGHT, FARMER_FRAME_WIDTH, FarmerAutoClicker } from "../systems/Farmer";
 
 export class ClickerScene extends Phaser.Scene {
     private counterText!: Phaser.GameObjects.Text;
@@ -26,8 +27,9 @@ export class ClickerScene extends Phaser.Scene {
     private shopButton!: Phaser.GameObjects.Rectangle;
     private shopIcon!: Phaser.GameObjects.Text;
 
-    private bunnyPet!: BunnyPet;
-    private cowPet!: CowPet;
+    private bunnyAutoClicker!: BunnyAutoClicker;
+    private cowAutoClicker!: CowAutoClicker;
+    private farmerAutoClicker!: FarmerAutoClicker;
 
     private isBusy: boolean = false;
     private trunkHealth: number = 10;
@@ -66,6 +68,11 @@ export class ClickerScene extends Phaser.Scene {
             frameWidth: COW_FRAME_WIDTH,
             frameHeight: COW_FRAME_HEIGHT,
         });
+
+        this.load.spritesheet("farmer", "farmer.png", {
+            frameWidth: FARMER_FRAME_WIDTH,
+            frameHeight: FARMER_FRAME_HEIGHT,
+        });
     }
 
     create() {
@@ -75,12 +82,16 @@ export class ClickerScene extends Phaser.Scene {
         this.initializeUI();
         this.setupResizeHandler();
 
-        this.bunnyPet = new BunnyPet(this);
-        this.syncBunnyPetState();
+        this.bunnyAutoClicker = new BunnyAutoClicker(this);
+        this.syncBunnyAutoClickerState();
 
-        this.cowPet = new CowPet(this);
-        this.cowPet.registerAnimations();
-        this.syncCowPetState();
+        this.cowAutoClicker = new CowAutoClicker(this);
+        this.cowAutoClicker.registerAnimations();
+        this.syncCowAutoClickerState();
+
+        this.farmerAutoClicker = new FarmerAutoClicker(this);
+        this.farmerAutoClicker.registerAnimations();
+        this.syncFarmerAutoClickerState();
     }
 
     private setupEventListeners() {
@@ -91,20 +102,26 @@ export class ClickerScene extends Phaser.Scene {
 
         GameState.instance.on("upgradesChanged", () => {
             this.refreshAvailableCrops();
-            this.syncBunnyPetState();
-            this.syncCowPetState();
+            this.syncBunnyAutoClickerState();
+            this.syncCowAutoClickerState();
+            this.syncFarmerAutoClickerState();
             SaveSystem.save();
         });
     }
 
-    private syncBunnyPetState(): void {
+    private syncBunnyAutoClickerState(): void {
         const bunnyCount = GameState.instance.getBunnyCount();
-        this.bunnyPet.syncBunnyCount(bunnyCount);
+        this.bunnyAutoClicker.syncBunnyCount(bunnyCount);
     }
 
-    private syncCowPetState(): void {
+    private syncCowAutoClickerState(): void {
         const cowCount = GameState.instance.getCowCount();
-        this.cowPet.syncCowCount(cowCount);
+        this.cowAutoClicker.syncCowCount(cowCount);
+    }
+
+    private syncFarmerAutoClickerState(): void {
+        const farmerCount = GameState.instance.getFarmerCount();
+        this.farmerAutoClicker.syncFarmerCount(farmerCount);
     }
 
     private createAnimations() {
@@ -497,7 +514,8 @@ export class ClickerScene extends Phaser.Scene {
                 this.updateCarouselVisuals(centerX, selectorY);
             }
 
-            this.cowPet?.onResize(w, h);
+            this.cowAutoClicker?.onResize(w, h);
+            this.farmerAutoClicker?.onResize(w, h);
         });
     }
 
