@@ -6,6 +6,7 @@ import { ShopUI } from "./UI";
 import { BunnyAutoClicker } from "../systems/Bunny";
 import { COW_FRAME_HEIGHT, COW_FRAME_WIDTH, CowAutoClicker } from "../systems/Cow";
 import { FARMER_FRAME_HEIGHT, FARMER_FRAME_WIDTH, FarmerAutoClicker } from "../systems/Farmer";
+import { formatLargeNumber } from "../systems/NumberFormat";
 
 export class ClickerScene extends Phaser.Scene {
     private counterText!: Phaser.GameObjects.Text;
@@ -160,7 +161,7 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private formatCropAmount(cropId: CropId, crops: CropAmounts) {
-        return `${getCropDef(cropId).icon}: ${crops[cropId] ?? 0}`;
+        return `${getCropDef(cropId).icon}: ${formatLargeNumber(crops[cropId] ?? 0)}`;
     }
 
     private isSmallScreen() {
@@ -696,8 +697,8 @@ export class ClickerScene extends Phaser.Scene {
         const crop = getCropDef(this.selectedCrop);
 
         const label = golden
-            ? `✨ +${amount} ${crop.icon}`
-            : `+${amount} ${crop.icon}`;
+            ? `\u2728 +${formatLargeNumber(amount)} ${crop.icon}`
+            : `+${formatLargeNumber(amount)} ${crop.icon}`;
 
         const floatText = this.add.text(x, y, label, {
             fontSize: golden ? "34px" : "28px",

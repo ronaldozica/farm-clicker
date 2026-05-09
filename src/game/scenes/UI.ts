@@ -4,6 +4,7 @@ import { GameState } from '../systems/GameState';
 import { MAX_COWS } from '../systems/Cow';
 import { MAX_BUNNIES } from '../systems/Bunny';
 import { MAX_FARMERS } from '../systems/Farmer';
+import { formatLargeNumber } from '../systems/NumberFormat';
 
 const SECTIONS: { id: string; label: string; icon: string }[] = [
     { id: 'crops', label: 'Crops', icon: '\u{1F331}' },
@@ -58,7 +59,7 @@ export class ShopUI {
                 const amount = GameState.instance.getCropAmount(u.costCrop);
                 const chip = document.createElement('div');
                 chip.className = 'resource-chip';
-                chip.innerHTML = `${cropDef.icon} ${amount}`;
+                chip.innerHTML = `${cropDef.icon} ${formatLargeNumber(amount)}`;
                 chipsEl.appendChild(chip);
             }
         });
@@ -125,8 +126,8 @@ export class ShopUI {
             ? `Max ${autoClickerProgress.count}/${autoClickerProgress.max}`
             : 'Purchased';
         const buyLabel = autoClickerProgress
-            ? `Buy (${autoClickerProgress.count}/${autoClickerProgress.max}) (${upgrade.cost} ${costCrop.icon})`
-            : `Buy (${upgrade.cost} ${costCrop.icon})`;
+            ? `Buy (${autoClickerProgress.count}/${autoClickerProgress.max}) (${formatLargeNumber(upgrade.cost)} ${costCrop.icon})`
+            : `Buy (${formatLargeNumber(upgrade.cost)} ${costCrop.icon})`;
 
         let statusClass = 'available';
         if (isPurchased) statusClass = 'purchased';
