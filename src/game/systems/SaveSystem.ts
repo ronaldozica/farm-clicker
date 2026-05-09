@@ -8,6 +8,7 @@ type SaveData = {
     purchasedUpgrades?: string[];
     unlockedCrops?: CropId[];
     cowCount?: number;
+    bunnyCount?: number;
 } & Record<string, unknown>;
 
 export class SaveSystem {
@@ -17,6 +18,7 @@ export class SaveSystem {
             purchasedUpgrades: GameState.instance.purchasedUpgrades,
             unlockedCrops: GameState.instance.unlockedCrops,
             cowCount: GameState.instance.getCowCount(),
+            bunnyCount: GameState.instance.getBunnyCount(),
         };
 
         localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -43,6 +45,11 @@ export class SaveSystem {
             typeof data.cowCount === "number"
                 ? data.cowCount
                 : GameState.instance.purchasedUpgrades.includes("cow") ? 1 : 0
+        );
+        GameState.instance.restoreBunnyCount(
+            typeof data.bunnyCount === "number"
+                ? data.bunnyCount
+                : GameState.instance.purchasedUpgrades.includes("bunny") ? 1 : 0
         );
 
         GameState.instance.purchasedUpgrades.forEach(upgradeId => {

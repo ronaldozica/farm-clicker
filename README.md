@@ -1,6 +1,4 @@
 <div align="center">
-  <img src="src/assets/hero.png" alt="Farm Clicker cover" width="720" />
-
   <h1>Farm Clicker</h1>
 
   <p>
@@ -21,6 +19,7 @@
 ## Table of Contents
 
 - [About](#about)
+- [Play Online](#play-online)
 - [Features](#features)
 - [Gameplay](#gameplay)
 - [Tech Stack](#tech-stack)
@@ -42,6 +41,12 @@ and buys pets that generate resources automatically.
 
 The game is designed as a responsive full-screen browser experience and keeps
 progress saved locally through the browser's `localStorage`.
+
+## Play Online
+
+Farm Clicker is available on both desktop and mobile browsers:
+
+**[https://farm-clicker-mu.vercel.app/](https://farm-clicker-mu.vercel.app/)**
 
 ## Features
 

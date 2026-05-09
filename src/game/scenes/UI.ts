@@ -1,6 +1,8 @@
 import { UPGRADES, type UpgradeDef } from '../systems/UpgradeDefs';
 import { getCropDef } from '../systems/CropDefs';
 import { GameState } from '../systems/GameState';
+import { MAX_COWS } from '../systems/Cow';
+import { MAX_BUNNIES } from '../systems/Bunny';
 
 const SECTIONS: { id: string; label: string; icon: string }[] = [
     { id: 'crops', label: 'Crops', icon: '🌱' },
@@ -28,6 +30,9 @@ export class ShopUI {
     }
 
     private render() {
+        const previousTree = document.getElementById('upgrade-tree');
+        const previousScrollTop = previousTree?.scrollTop ?? 0;
+
         const purchased = GameState.instance.purchasedUpgrades;
         this.modal.innerHTML = `
             <div class="modal-header">
@@ -66,7 +71,7 @@ export class ShopUI {
 
             if (upgrades.length === 0) return;
 
-            const purchasedCount = upgrades.filter(u => purchased.includes(u.id)).length;
+            const purchasedCount = upgrades.filter(upgrade => this.isUpgradeComplete(upgrade, purchased)).length;
 
             const sectionEl = document.createElement('div');
             sectionEl.className = 'upgrade-section';
@@ -101,14 +106,26 @@ export class ShopUI {
             orphans.forEach(u => fallbackSection.appendChild(this.buildNode(u)));
             treeEl.appendChild(fallbackSection);
         }
+
+        treeEl.scrollTop = previousScrollTop;
     }
 
     private buildNode(upgrade: UpgradeDef): HTMLElement {
         const purchased = GameState.instance.purchasedUpgrades;
-        const isPurchased = purchased.includes(upgrade.id);
+        const petProgress = this.getRepeatablePetProgress(upgrade);
+        const isPurchased = this.isUpgradeComplete(upgrade, purchased);
         const hasRequirements = upgrade.requires.every(req => purchased.includes(req));
         const canAfford = GameState.instance.getCropAmount(upgrade.costCrop) >= upgrade.cost;
         const costCrop = getCropDef(upgrade.costCrop);
+        const description = petProgress
+            ? `${upgrade.description} (${petProgress.count}/${petProgress.max})`
+            : upgrade.description;
+        const purchasedBadge = petProgress
+            ? `Max ${petProgress.count}/${petProgress.max}`
+            : 'Purchased';
+        const buyLabel = petProgress
+            ? `Buy (${petProgress.count}/${petProgress.max}) (${upgrade.cost} ${costCrop.icon})`
+            : `Buy (${upgrade.cost} ${costCrop.icon})`;
 
         let statusClass = 'available';
         if (isPurchased) statusClass = 'purchased';
@@ -121,14 +138,14 @@ export class ShopUI {
             <span class="upgrade-icon">${upgrade.icon}</span>
             <div class="upgrade-info">
                 <strong class="upgrade-name">${upgrade.name}</strong>
-                <small class="upgrade-desc">${upgrade.description}</small>
+                <small class="upgrade-desc">${description}</small>
             </div>
             ${isPurchased
-        ? `<div class="purchased-badge">Purchased</div>`
+        ? `<div class="purchased-badge">${purchasedBadge}</div>`
         : `<button
                         id="btn-${upgrade.id}"
                         ${(!hasRequirements || !canAfford) ? 'disabled' : ''}>
-                        ${!hasRequirements ? '🔒 Locked' : `Buy (${upgrade.cost} ${costCrop.icon})`}
+                        ${!hasRequirements ? '\u{1F512} Locked' : buyLabel}
                    </button>`
 }
         `;
@@ -141,5 +158,28 @@ export class ShopUI {
         }
 
         return node;
+    }
+
+    private isUpgradeComplete(upgrade: UpgradeDef, purchased: string[]): boolean {
+        const petProgress = this.getRepeatablePetProgress(upgrade);
+        if (petProgress) {
+            return petProgress.count >= petProgress.max;
+        }
+
+        return purchased.includes(upgrade.id);
+    }
+
+    private getRepeatablePetProgress(upgrade: UpgradeDef): { count: number; max: number } | undefined {
+        if (upgrade.type !== "pet") return undefined;
+
+        if (upgrade.value === "cow") {
+            return { count: GameState.instance.getCowCount(), max: MAX_COWS };
+        }
+
+        if (upgrade.value === "bunny") {
+            return { count: GameState.instance.getBunnyCount(), max: MAX_BUNNIES };
+        }
+
+        return undefined;
     }
 }

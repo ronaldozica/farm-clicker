@@ -6,15 +6,18 @@ export const COW_FRAME_HEIGHT = 170;
 const COW_WALK_FRAMES = { start: 0, end: 4 };
 const COW_EAT_FRAMES = { start: 5, end: 8 };
 
-const COW_SCALE = 0.55;
-const COW_WALK_SPEED = 90; 
+const COW_SCALE_MIN = 0.45;
+const COW_SCALE_MAX = 0.65;
+const COW_WALK_SPEED = 90;
 const COW_WALK_DURATION_MIN = 3500;
 const COW_WALK_DURATION_MAX = 6500;
 const COW_EAT_DURATION_MIN = 2500;
 const COW_EAT_DURATION_MAX = 5000;
+const COW_EAT_FRAME_RATE = 6;
+const COW_GRASS_REWARD = 25;
 
-const COW_DEPTH_MIN = 1.5;
-const COW_DEPTH_MAX = 2.5;
+const COW_DEPTH_MIN = 0.35;
+const COW_DEPTH_MAX = 0.75;
 
 const COW_Y_MIN_RATIO = 0.25;
 const COW_Y_MAX_RATIO = 0.80;
@@ -32,6 +35,7 @@ interface CowInstance {
     eatTimer?: Phaser.Time.TimerEvent;
     y: number;
     depth: number;
+    scale: number;
     active: boolean;
 }
 
@@ -57,7 +61,7 @@ export class CowPet {
             this.scene.anims.create({
                 key: "cow-eat",
                 frames: this.scene.anims.generateFrameNumbers("cow", COW_EAT_FRAMES),
-                frameRate: 6,
+                frameRate: COW_EAT_FRAME_RATE,
                 repeat: -1,
             });
         }
@@ -87,14 +91,16 @@ export class CowPet {
         const y = height * yRatio;
 
         const direction: 1 | -1 = Math.random() < 0.5 ? 1 : -1;
+        const scale = this.getCowScaleForY(y, height);
+        const spriteHalfW = (COW_FRAME_WIDTH * scale) / 2;
         const startX = direction === 1
-            ? -(COW_FRAME_WIDTH * COW_SCALE) / 2 - 10
-            : width + (COW_FRAME_WIDTH * COW_SCALE) / 2 + 10;
+            ? -spriteHalfW - 10
+            : width + spriteHalfW + 10;
 
         const sprite = this.scene.add.sprite(startX, y, "cow");
-        sprite.setScale(COW_SCALE);
+        sprite.setScale(scale);
 
-        const depth = Phaser.Math.FloatBetween(COW_DEPTH_MIN, COW_DEPTH_MAX);
+        const depth = this.getCowDepthForY(y, height);
         sprite.setDepth(depth);
 
         sprite.setFlipX(direction === -1);
@@ -107,6 +113,7 @@ export class CowPet {
             direction,
             y,
             depth,
+            scale,
             active: true,
         };
 
@@ -131,12 +138,12 @@ export class CowPet {
         cow.sprite.setFlipX(cow.direction === -1);
         cow.sprite.play("cow-walk");
 
-        const duration = Phaser.Math.Between(COW_WALK_DURATION_MIN, COW_WALK_DURATION_MAX);
         const { width } = this.scene.cameras.main;
-        const spriteHalfW = (COW_FRAME_WIDTH * COW_SCALE) / 2;
+        const duration = this.getResponsiveWalkDuration(width);
+        const spriteHalfW = (COW_FRAME_WIDTH * cow.scale) / 2;
         const targetX = cow.direction === 1
-            ? width + spriteHalfW + 10 
-            : -spriteHalfW - 10;       
+            ? width + spriteHalfW + 10
+            : -spriteHalfW - 10;
 
         this.scene.tweens.killTweensOf(cow.sprite);
         this.scene.tweens.add({
@@ -169,14 +176,15 @@ export class CowPet {
 
         const duration = Phaser.Math.Between(COW_EAT_DURATION_MIN, COW_EAT_DURATION_MAX);
 
-        const tickInterval = 1200;
-        const ticks = Math.floor(duration / tickInterval);
+        const tickInterval = this.getEatAnimationCycleMs();
+        const firstTickDelay = this.getEatRewardDelayMs();
+        const ticks = Math.max(1, Math.floor((duration - firstTickDelay) / tickInterval) + 1);
 
         for (let i = 0; i < ticks; i++) {
-            this.scene.time.delayedCall(i * tickInterval + 400, () => {
+            this.scene.time.delayedCall(firstTickDelay + i * tickInterval, () => {
                 if (!cow.active || cow.state !== "eating") return;
-                GameState.instance.addClick("grass", 1);
-                this.spawnCowFloatText(cow, "+1 🌿");
+                GameState.instance.addClick("grass", COW_GRASS_REWARD);
+                this.spawnCowFloatText(cow, `+${COW_GRASS_REWARD} \u{1F331}`);
             });
         }
 
@@ -187,9 +195,46 @@ export class CowPet {
         });
     }
 
+    private getResponsiveWalkDuration(width: number) {
+        const widthRatio = Phaser.Math.Clamp(width / 900, 0.45, 1);
+        const minDuration = Math.round(COW_WALK_DURATION_MIN * widthRatio);
+        const maxDuration = Math.round(COW_WALK_DURATION_MAX * widthRatio);
+        return Phaser.Math.Between(minDuration, maxDuration);
+    }
+
+    private getEatAnimationCycleMs() {
+        const frameCount = COW_EAT_FRAMES.end - COW_EAT_FRAMES.start + 1;
+        return (frameCount / COW_EAT_FRAME_RATE) * 1000;
+    }
+
+    private getEatRewardDelayMs() {
+        return (2 / COW_EAT_FRAME_RATE) * 1000;
+    }
+
+    private getCowPerspectiveRatio(y: number, height: number) {
+        const minY = height * COW_Y_MIN_RATIO;
+        const maxY = height * COW_Y_MAX_RATIO;
+        return Phaser.Math.Clamp((y - minY) / (maxY - minY), 0, 1);
+    }
+
+    private getCowScaleForY(y: number, height: number) {
+        return Phaser.Math.Linear(COW_SCALE_MIN, COW_SCALE_MAX, this.getCowPerspectiveRatio(y, height));
+    }
+
+    private getCowDepthForY(y: number, height: number) {
+        return Phaser.Math.Linear(COW_DEPTH_MIN, COW_DEPTH_MAX, this.getCowPerspectiveRatio(y, height));
+    }
+
+    private updateCowPerspective(cow: CowInstance, height: number) {
+        cow.scale = this.getCowScaleForY(cow.y, height);
+        cow.depth = this.getCowDepthForY(cow.y, height);
+        cow.sprite.setScale(cow.scale);
+        cow.sprite.setDepth(cow.depth);
+    }
+
     private spawnCowFloatText(cow: CowInstance, label: string) {
         const x = cow.sprite.x + Phaser.Math.Between(-20, 20);
-        const y = cow.sprite.y - (COW_FRAME_HEIGHT * COW_SCALE) / 2 - 10;
+        const y = cow.sprite.y - (COW_FRAME_HEIGHT * cow.scale) / 2 - 10;
 
         const text = this.scene.add.text(x, y, label, {
             fontSize: "22px",
@@ -201,7 +246,7 @@ export class CowPet {
             shadow: { offsetX: 0, offsetY: 2, color: "#000000", blur: 3, fill: true },
         })
             .setOrigin(0.5)
-            .setDepth(cow.depth + 0.5);
+            .setDepth(cow.depth + 0.1);
 
         this.scene.tweens.add({
             targets: text,
@@ -218,6 +263,7 @@ export class CowPet {
             const newY = Phaser.Math.Clamp(cow.y, height * COW_Y_MIN_RATIO, height * COW_Y_MAX_RATIO);
             cow.sprite.y = newY;
             cow.y = newY;
+            this.updateCowPerspective(cow, height);
         });
     }
 

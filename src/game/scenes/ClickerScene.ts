@@ -98,12 +98,8 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private syncBunnyPetState(): void {
-        const hasBunny = GameState.instance.purchasedUpgrades.includes("bunny");
-        if (hasBunny) {
-            this.bunnyPet.activate();
-        } else {
-            this.bunnyPet.deactivate();
-        }
+        const bunnyCount = GameState.instance.getBunnyCount();
+        this.bunnyPet.syncBunnyCount(bunnyCount);
     }
 
     private syncCowPetState(): void {
@@ -194,6 +190,7 @@ export class ClickerScene extends Phaser.Scene {
         this.createFarm(centerX);
 
         this.progressBar = this.add.graphics();
+        this.progressBar.setDepth(5);
 
         this.createCropSelector(centerX, buttonY);
         this.createPlantButton(centerX, buttonY);
@@ -216,6 +213,7 @@ export class ClickerScene extends Phaser.Scene {
 
     private createScoreUI(centerX: number, counterY: number) {
         this.counterBg = this.add.graphics();
+        this.counterBg.setDepth(4);
         this.counterText = this.add.text(centerX, counterY, this.formatScoreText(GameState.instance.getCropAmounts()), {
             fontSize: "32px",
             fontFamily: "'Inter', 'Nunito', sans-serif",
@@ -430,11 +428,12 @@ export class ClickerScene extends Phaser.Scene {
     }
 
     private createPlantButton(x: number, y: number) {
-        const shadow = this.add.rectangle(x, y + 8, 200, 80, 0x3e2723, 0.4).setOrigin(0.5);
+        const shadow = this.add.rectangle(x, y + 8, 200, 80, 0x3e2723, 0.4).setOrigin(0.5).setDepth(4);
 
         this.buttonBg = this.add.rectangle(x, y, 200, 80, 0x689f38)
             .setStrokeStyle(4, 0x33691e)
-            .setOrigin(0.5);
+            .setOrigin(0.5)
+            .setDepth(5);
 
         this.buttonText = this.add.text(x, y, this.getButtonText(), {
             fontSize: "28px",
@@ -444,7 +443,7 @@ export class ClickerScene extends Phaser.Scene {
             stroke: "#33691e",
             strokeThickness: 4,
             shadow: { offsetX: 0, offsetY: 2, color: "#000", blur: 0, stroke: false, fill: true }
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(6);
 
         this.buttonBg.setInteractive({ useHandCursor: true })
             .on("pointerdown", () => this.handlePlantAction(this.buttonBg, this.buttonText, shadow))
